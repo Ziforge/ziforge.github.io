@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziforge - Audio Plugins</title>
+    <meta name="description" content="Professional audio plugins for music production. Plinky Interface, OTO Interface, and more.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">Ziforge</a>
+            <div class="nav-links">
+                <a href="#plugins">Plugins</a>
+                <a href="#about">About</a>
+                <a href="https://github.com/Ziforge" target="_blank">GitHub</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="coming-soon-banner">Store Opening 2025</div>
+            <h1>Audio Plugins for Creative Musicians</h1>
+            <p>Professional tools for hardware synth integration and sound design</p>
+        </section>
+
+        <section id="plugins" class="plugins">
+            <h2>Plugins</h2>
+
+            <div class="plugin-grid">
+                <!-- Plinky Interface -->
+                <div class="plugin-card">
+                    <div class="plugin-header">
+                        <h3>Plinky Interface</h3>
+                        <span class="badge">VST3 / AU</span>
+                    </div>
+                    <p class="plugin-description">
+                        Complete MIDI controller for the Plinky synthesizer.
+                        Control all parameters from your DAW with full preset management.
+                    </p>
+                    <ul class="features">
+                        <li>Full parameter control via MIDI CC</li>
+                        <li>Preset management and A/B compare</li>
+                        <li>Works with Plinky v3 firmware</li>
+                        <li>macOS & Windows</li>
+                    </ul>
+                    <div class="plugin-actions">
+                        <a href="#" class="btn btn-disabled" data-product="plinky">Coming Soon</a>
+                        <a href="#" class="btn btn-secondary btn-disabled">Demo</a>
+                    </div>
+                </div>
+
+                <!-- OTO Interface -->
+                <div class="plugin-card">
+                    <div class="plugin-header">
+                        <h3>OTO Interface</h3>
+                        <span class="badge">VST3 / AU</span>
+                    </div>
+                    <p class="plugin-description">
+                        Control suite for OTO Machines effects pedals.
+                        BAM, BIM, BOUM, Biscuit, and more - all from your DAW.
+                    </p>
+                    <ul class="features">
+                        <li>Support for all OTO pedals</li>
+                        <li>Real-time parameter control</li>
+                        <li>Preset management</li>
+                        <li>macOS & Windows</li>
+                    </ul>
+                    <div class="plugin-actions">
+                        <a href="#" class="btn btn-disabled" data-product="oto">Coming Soon</a>
+                        <a href="#" class="btn btn-secondary btn-disabled">Demo</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about">
+            <h2>About</h2>
+            <p>
+                Ziforge creates tools that bridge the gap between hardware synthesizers
+                and modern DAW workflows. Our plugins are designed by musicians, for musicians.
+            </p>
+            <p>
+                Based in the EU. All plugins come with a perpetual license -
+                pay once, use forever, including all future updates.
+            </p>
+        </section>
+
+        <section class="support">
+            <h2>Support</h2>
+            <p>
+                Need help? Check the <a href="https://github.com/Ziforge">documentation</a>
+                or email <a href="mailto:support@ziforge.com">support@ziforge.com</a>
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Ziforge. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+        </div>
+    </footer>
+
+    <!-- Store not live yet - Paddle.js will be added when ready -->
+    <script>
+        // All buttons are disabled - store not live yet
+        // When ready to launch:
+        // 1. Add Paddle.js: <script src="https://cdn.paddle.com/paddle/v2/paddle.js">
+        // 2. Initialize with your client token
+        // 3. Change btn-disabled to btn-primary
+        // 4. Uncomment the checkout code below
+
+        /*
+        Paddle.Initialize({ token: 'your_client_token' });
+
+        document.querySelectorAll('[data-product]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const product = e.target.dataset.product;
+                const priceIds = {
+                    plinky: 'pri_XXXXX',
+                    oto: 'pri_XXXXX'
+                };
+                Paddle.Checkout.open({
+                    items: [{ priceId: priceIds[product], quantity: 1 }],
+                    customData: {
+                        plugin: product,
+                        product_name: product === 'plinky' ? 'Plinky Interface' : 'OTO Interface'
+                    }
+                });
+            });
+        });
+        */
+    </script>
+</body>
+</html>
