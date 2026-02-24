@@ -21,357 +21,136 @@
 
   <!-- Background canvas -->
   <canvas id="bg-canvas"></canvas>
-  <!-- Audio toggle -->
-  <button id="audio-toggle" title="Toggle sound" style="position:fixed;bottom:1rem;right:1rem;z-index:50;background:rgba(10,10,10,0.8);border:1px solid #222;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;transition:color 0.2s,border-color 0.2s;">
-    <svg id="audio-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-  </button>
   <script>
   (function(){
     var canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
     var ctx = canvas.getContext('2d');
-    var W, H, fc = 0;
-    var boids = [];
-    var callEffects = [];
-    var mouseX = -9999, mouseY = -9999;
+    var W, H, time = 0;
+    var imageData, pixels;
 
-    // ===== BOID PARAMETERS =====
-    var COUNT = 350, TRAIL = 10;
-    var MAX_SPEED = 3.5, MAX_FORCE = 0.15;
-    var SEP_DIST = 30, ALI_DIST = 80, COH_DIST = 120;
-    var SEP_W = 2.0, ALI_W = 1.0, COH_W = 0.8;
-    var MOUSE_DIST = 250, MOUSE_W = 1.5;
-    var EDGE_M = 60, EDGE_F = 0.3;
-    var PI = Math.PI, TAU = PI * 2;
-
-    var COLORS = [[232,168,53],[210,140,40],[91,192,190],[120,200,180],[200,180,80],[180,120,50]];
-
-    // ===== BIRD SPECIES (from Verdant Drift Mindlin-Laje syrinx model) =====
-    var SPECIES = [
-      { name:'blackbird', freq:2200, dur:0.45,
-        alpha:function(t){ return 0.4 + Math.sin(t*25)*0.01; },
-        beta:function(t){ var e=t<0.1?t/0.1:t>0.85?(1-t)/0.15:1; return 0.45*e; }},
-      { name:'great_tit', freq:4500, dur:0.35,
-        alpha:function(t){ return (t*6%1)<0.4 ? 0.5 : 0.25; },
-        beta:function(t){ var p=t*6%1; var ne=p<0.35?Math.sin(p/0.35*PI):0; var e=t<0.08?t/0.08:t>0.9?(1-t)/0.1:1; return 0.4*ne*e; }},
-      { name:'wren', freq:5500, dur:0.5,
-        alpha:function(t){ return 0.45+Math.sin(t*350)*0.08; },
-        beta:function(t){ var e=t<0.05?t/0.05:t>0.8?(1-t)/0.2:1; return 0.5*e; }},
-      { name:'robin', freq:3800, dur:0.25,
-        alpha:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.45,0.35,0.5,0.3,0.42][Math.min(n,4)]+Math.sin(w*TAU)*0.03; },
-        beta:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.4,0.35,0.45,0.3,0.4][Math.min(n,4)]*Math.sin(w*PI); }},
-      { name:'wood_pigeon', freq:500, dur:0.7,
-        alpha:function(t){ var n=Math.floor(t*5); return [0.15,0.25,0.15,0.12,0.12][Math.min(n,4)]; },
-        beta:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.3,0.5,0.3,0.25,0.25][Math.min(n,4)]*Math.sin(w*PI); }}
-    ];
-
-    // ===== AUDIO SYSTEM =====
-    var audioCtx=null, masterGain=null, audioReady=false, muted=false;
-    var birdBuffers=[], cricketBuf=null;
-    var lastBirdTime=0, lastCricketTime=0;
-
-    // Mindlin-Laje syrinx acceleration: dy/dt = -a*x - b*x*|x| - x^3 + b*g*sign(x)*y^2
-    function SA(x,y,a,b,g){ return -a*x - b*x*Math.abs(x) - x*x*x + b*g*(x>=0?1:-1)*y*y; }
-
-    function rk4Step(x,y,a,b,g,dt){
-      // Proper RK4 for coupled ODE: dx/dt=y, dy/dt=SA(x,y,a,b,g)
-      var k1x=y, k1y=SA(x,y,a,b,g);
-      var k2x=y+0.5*dt*k1y, k2y=SA(x+0.5*dt*k1x,y+0.5*dt*k1y,a,b,g);
-      var k3x=y+0.5*dt*k2y, k3y=SA(x+0.5*dt*k2x,y+0.5*dt*k2y,a,b,g);
-      var k4x=y+dt*k3y, k4y=SA(x+dt*k3x,y+dt*k3y,a,b,g);
-      return {
-        x: x+(dt/6)*(k1x+2*k2x+2*k3x+k4x),
-        y: y+(dt/6)*(k1y+2*k2y+2*k3y+k4y)
-      };
-    }
-
-    function synthBird(sp){
-      var sr=audioCtx.sampleRate, n=Math.floor(sp.dur*sr);
-      var buf=audioCtx.createBuffer(1,n,sr), data=buf.getChannelData(0);
-      // Single labium — dual labia with opposite phases cancel out
-      // Output velocity (y) not position, matching Godot model
-      var x=0.01, y=0, gamma=0.15, steps=8;
-      var peak=0;
-      for(var i=0;i<n;i++){
-        var t=i/n, alpha=sp.alpha(t), beta=sp.beta(t);
-        var omega=TAU*sp.freq, sdt=(1/sr)*omega/steps;
-        for(var s=0;s<steps;s++){
-          var r=rk4Step(x,y,alpha,beta,gamma,sdt);
-          x=r.x; y=r.y;
-        }
-        x=Math.max(-10,Math.min(10,x)); y=Math.max(-10,Math.min(10,y));
-        var env=1; if(t<0.08)env=t/0.08; if(t>0.85)env=(1-t)/0.15;
-        var sample=y*env;
-        sample+=(Math.random()-0.5)*0.005*beta;
-        data[i]=sample;
-        if(Math.abs(sample)>peak) peak=Math.abs(sample);
+    // Permutation table for Perlin noise
+    var perm = new Uint8Array(512);
+    (function(){
+      var p = [];
+      for (var i = 0; i < 256; i++) p[i] = i;
+      for (var i = 255; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = p[i]; p[i] = p[j]; p[j] = tmp;
       }
-      // Normalize to 0.5 peak
-      if(peak>0.001) for(var i=0;i<n;i++) data[i]*=0.5/peak;
-      // Fallback: if model produced silence, generate FM chirp
-      if(peak<=0.001){
-        for(var i=0;i<n;i++){
-          var t=i/n, env2=Math.sin(t*PI);
-          var mod=Math.sin(TAU*sp.freq*0.5*t*sp.dur+Math.sin(TAU*sp.freq*2*t*sp.dur)*0.3);
-          data[i]=mod*env2*0.4;
-        }
+      for (var i = 0; i < 512; i++) perm[i] = p[i & 255];
+    })();
+
+    // 2D gradient vectors
+    var grad2 = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
+
+    function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    function lerp(a, b, t) { return a + t * (b - a); }
+
+    function perlin2(x, y) {
+      var xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+      var xf = x - Math.floor(x), yf = y - Math.floor(y);
+      var u = fade(xf), v = fade(yf);
+
+      var aa = perm[perm[xi] + yi], ab = perm[perm[xi] + yi + 1];
+      var ba = perm[perm[xi + 1] + yi], bb = perm[perm[xi + 1] + yi + 1];
+
+      var g, dot;
+      g = grad2[aa & 7]; var d00 = g[0] * xf + g[1] * yf;
+      g = grad2[ba & 7]; var d10 = g[0] * (xf - 1) + g[1] * yf;
+      g = grad2[ab & 7]; var d01 = g[0] * xf + g[1] * (yf - 1);
+      g = grad2[bb & 7]; var d11 = g[0] * (xf - 1) + g[1] * (yf - 1);
+
+      return lerp(lerp(d00, d10, u), lerp(d01, d11, u), v);
+    }
+
+    // Fractal Brownian Motion — layered noise
+    function fbm(x, y, octaves) {
+      var val = 0, amp = 0.5, freq = 1;
+      for (var i = 0; i < octaves; i++) {
+        val += amp * perlin2(x * freq, y * freq);
+        amp *= 0.5;
+        freq *= 2;
       }
-      return buf;
+      return val;
     }
 
-    function synthCricket(){
-      // Cricket stridulation: tooth-strike impulses through wing membrane resonator
-      // From Verdant Drift InsectStridulationModel — 4500Hz, Q=25, 4 pulses/chirp
-      var sr=audioCtx.sampleRate, dur=0.35, n=Math.floor(dur*sr);
-      var buf=audioCtx.createBuffer(1,n,sr), data=buf.getChannelData(0);
-      var wingF=4500+Math.random()*300, wingQ=25;
-      var w1=0,w2=0, pulses=4, pDur=dur/(pulses*2.5);
-      for(var i=0;i<n;i++){
-        var t=i/sr;
-        // Generate tooth-strike impulses
-        var imp=0, pIdx=Math.floor(t/pDur), within=(t%pDur)/pDur;
-        if(pIdx%2===0 && pIdx<pulses*2){
-          var filePos=(pIdx/2)/pulses;
-          if(within<0.15) imp=Math.sin(within/0.15*PI)*Math.sin(filePos*PI)*(0.8+Math.random()*0.4);
-        }
-        // Wing membrane bandpass resonator (biquad)
-        var om=TAU*wingF/sr, al=Math.sin(om)/(2*wingQ);
-        var b0=al/(1+al), b2=-al/(1+al), a1=-2*Math.cos(om)/(1+al), a2=(1-al)/(1+al);
-        var out=b0*imp+w1; w1=-a1*out+w2; w2=b2*imp-a2*out;
-        var cEnv=Math.sin(t/dur*PI); // chirp envelope
-        data[i]=Math.tanh(out*2)*0.5*cEnv;
-      }
-      return buf;
+    // Render at reduced resolution for performance, then scale up
+    var SCALE = 2; // render at 1/2 resolution
+    var offCanvas, offCtx;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      // Off-screen canvas at reduced resolution
+      offCanvas = document.createElement('canvas');
+      offCanvas.width = Math.ceil(W / SCALE);
+      offCanvas.height = Math.ceil(H / SCALE);
+      offCtx = offCanvas.getContext('2d');
+      imageData = offCtx.createImageData(offCanvas.width, offCanvas.height);
+      pixels = imageData.data;
     }
 
-    function initAudio(){
-      try{
-        audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-        masterGain=audioCtx.createGain();
-        masterGain.gain.value=0.35;
-        masterGain.connect(audioCtx.destination);
-        audioCtx.resume();
-        // Generate 2 variations per bird species
-        for(var s=0;s<SPECIES.length;s++){
-          birdBuffers.push(synthBird(SPECIES[s]));
-          // Second variation with slight pitch shift
-          var sp2=Object.assign({},SPECIES[s]);
-          sp2.freq=SPECIES[s].freq*(0.92+Math.random()*0.16);
-          birdBuffers.push(synthBird(sp2));
-        }
-        // Generate 3 cricket variations
-        for(var c=0;c<3;c++) birdBuffers.push(null); // placeholder
-        cricketBuf=synthCricket();
-        audioReady=true;
-      }catch(e){}
-    }
+    // Color palette: amber #e8a835, cyan #5bc0be
+    var amberR = 232, amberG = 168, amberB = 53;
+    var cyanR = 91, cyanG = 192, cyanB = 190;
 
-    function playBird(b){
-      if(!audioReady||muted)return;
-      var idx=Math.floor(Math.random()*SPECIES.length)*2+Math.floor(Math.random()*2);
-      if(!birdBuffers[idx])return;
-      var src=audioCtx.createBufferSource(); src.buffer=birdBuffers[idx];
-      var g=audioCtx.createGain(); g.gain.value=0.12+Math.random()*0.12;
-      var pan=audioCtx.createStereoPanner(); pan.pan.value=Math.max(-1,Math.min(1,(b.x/W)*2-1));
-      src.playbackRate.value=0.9+Math.random()*0.2;
-      src.connect(g); g.connect(pan); pan.connect(masterGain); src.start();
-      // Visual feedback
-      b.singing=90;
-      callEffects.push({x:b.x,y:b.y,frame:fc,color:b.color,type:'bird'});
-    }
+    function frame() {
+      time += 0.004;
 
-    function playCricket(cx,cy){
-      if(!audioReady||muted||!cricketBuf)return;
-      var src=audioCtx.createBufferSource(); src.buffer=cricketBuf;
-      var g=audioCtx.createGain(); g.gain.value=0.04+Math.random()*0.04;
-      var pan=audioCtx.createStereoPanner(); pan.pan.value=Math.max(-1,Math.min(1,(cx/W)*2-1));
-      src.playbackRate.value=0.85+Math.random()*0.3;
-      src.connect(g); g.connect(pan); pan.connect(masterGain); src.start();
-      callEffects.push({x:cx,y:cy,frame:fc,color:[91,192,190],type:'cricket'});
-    }
+      var w = offCanvas.width, h = offCanvas.height;
+      var noiseScale = 0.008;
+      var grainScale = 0.06;
 
-    // Init audio on first interaction
-    // IMPORTANT: mousemove is NOT a user activation in Chrome — AudioContext stays suspended
-    // Must resume on click/keydown (actual user activations)
-    var audioInited=false;
-    function tryInitAudio(){
-      if(!audioInited){audioInited=true;initAudio();}
-      if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
-    }
-    document.addEventListener('click',tryInitAudio);
-    document.addEventListener('keydown',tryInitAudio,{once:true});
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var idx = (y * w + x) * 4;
 
-    // Mute toggle
-    var toggleBtn=document.getElementById('audio-toggle');
-    if(toggleBtn) toggleBtn.addEventListener('click',function(e){
-      // Don't stopPropagation — let click bubble to tryInitAudio for AudioContext resume
-      muted=!muted;
-      if(masterGain) masterGain.gain.value=muted?0:0.35;
-      toggleBtn.style.color=muted?'#333':'#666';
-      toggleBtn.style.borderColor=muted?'#1a1a1a':'#222';
-    });
+          // Slow-moving Perlin noise for color field
+          var n1 = fbm(x * noiseScale + time * 0.3, y * noiseScale + time * 0.2, 3);
+          // Second noise layer offset for variation
+          var n2 = fbm(x * noiseScale * 1.5 + 50 + time * 0.15, y * noiseScale * 1.5 + 50 - time * 0.1, 2);
 
-    // ===== BOID CREATION =====
-    function makeBoid(){
-      var angle=Math.random()*TAU, spd=1+Math.random()*2;
-      var ci=Math.floor(Math.random()*COLORS.length);
-      var si=Math.floor(Math.random()*SPECIES.length);
-      return {
-        x:Math.random()*W, y:Math.random()*H,
-        vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd,
-        trail:[], color:COLORS[ci], size:1.5+Math.random()*1.5,
-        species:si, wingPhase:Math.random()*TAU,
-        singing:0
-      };
-    }
+          // Fine grain noise (fast, high frequency)
+          var grain = (Math.random() - 0.5) * 0.12;
 
-    function resize(){
-      W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight;
-      var target=Math.min(COUNT,Math.floor((W*H)/3500));
-      while(boids.length<target)boids.push(makeBoid());
-      while(boids.length>target)boids.pop();
-    }
+          // Map n1 to color blend: negative=amber, positive=cyan
+          var blend = (n1 + 1) * 0.5; // 0..1
+          var r = amberR + (cyanR - amberR) * blend;
+          var g = amberG + (cyanG - amberG) * blend;
+          var b = amberB + (cyanB - amberB) * blend;
 
-    document.addEventListener('mousemove',function(e){mouseX=e.clientX;mouseY=e.clientY;},{passive:true});
-    document.addEventListener('mouseleave',function(){mouseX=-9999;mouseY=-9999;});
+          // Brightness from combined noise — mostly dark with visible peaks
+          var brightness = (n1 * 0.4 + n2 * 0.35 + grain) * 0.5 + 0.5;
+          brightness = Math.max(0, Math.min(1, brightness));
+          // Boost contrast: push darks darker, lights brighter
+          brightness = brightness * brightness;
 
-    function limit(vx,vy,max){
-      var m=Math.sqrt(vx*vx+vy*vy);
-      if(m>max&&m>0){vx=(vx/m)*max;vy=(vy/m)*max;}
-      return{x:vx,y:vy};
-    }
+          var intensity = brightness * 0.6;
 
-    // ===== MAIN LOOP =====
-    function frame(){
-      ctx.clearRect(0,0,W,H);
-      fc++;
-      var now=fc/60; // approximate seconds
-
-      for(var i=0;i<boids.length;i++){
-        var b=boids[i];
-        var sepX=0,sepY=0,sepN=0,aliX=0,aliY=0,aliN=0,cohX=0,cohY=0,cohN=0;
-
-        for(var j=0;j<boids.length;j++){
-          if(i===j)continue;
-          var o=boids[j], dx=b.x-o.x, dy=b.y-o.y;
-          var d=Math.sqrt(dx*dx+dy*dy);
-          if(d<SEP_DIST&&d>0){sepX+=dx/d/d;sepY+=dy/d/d;sepN++;}
-          if(d<ALI_DIST){aliX+=o.vx;aliY+=o.vy;aliN++;}
-          if(d<COH_DIST){cohX+=o.x;cohY+=o.y;cohN++;}
-        }
-
-        var ax=0,ay=0;
-        if(sepN>0){var s=limit(sepX,sepY,MAX_SPEED);ax+=s.x*SEP_W;ay+=s.y*SEP_W;}
-        if(aliN>0){var a2=limit(aliX/aliN-b.vx,aliY/aliN-b.vy,MAX_FORCE);ax+=a2.x*ALI_W;ay+=a2.y*ALI_W;}
-        if(cohN>0){var c2=limit(cohX/cohN-b.x,cohY/cohN-b.y,MAX_FORCE);ax+=c2.x*COH_W;ay+=c2.y*COH_W;}
-
-        var mdx=mouseX-b.x,mdy=mouseY-b.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
-        if(md<MOUSE_DIST&&md>1){var mf=(1-md/MOUSE_DIST);ax+=(mdx/md)*mf*MOUSE_W;ay+=(mdy/md)*mf*MOUSE_W;}
-
-        if(b.x<EDGE_M)ax+=(EDGE_M-b.x)/EDGE_M*EDGE_F;
-        if(b.x>W-EDGE_M)ax-=(b.x-(W-EDGE_M))/EDGE_M*EDGE_F;
-        if(b.y<EDGE_M)ay+=(EDGE_M-b.y)/EDGE_M*EDGE_F;
-        if(b.y>H-EDGE_M)ay-=(b.y-(H-EDGE_M))/EDGE_M*EDGE_F;
-
-        b.vx+=ax;b.vy+=ay;
-        var v=limit(b.vx,b.vy,MAX_SPEED);b.vx=v.x;b.vy=v.y;
-        b.x+=b.vx;b.y+=b.vy;
-        if(b.x<-20)b.x=W+20;if(b.x>W+20)b.x=-20;
-        if(b.y<-20)b.y=H+20;if(b.y>H+20)b.y=-20;
-
-        b.trail.push({x:b.x,y:b.y}); if(b.trail.length>TRAIL)b.trail.shift();
-        if(b.singing>0) b.singing--;
-
-        // Draw smooth trail
-        if(b.trail.length>2){
-          ctx.beginPath();
-          ctx.moveTo(b.trail[0].x,b.trail[0].y);
-          for(var k=1;k<b.trail.length-1;k++){
-            var cx2=(b.trail[k].x+b.trail[k+1].x)*0.5;
-            var cy2=(b.trail[k].y+b.trail[k+1].y)*0.5;
-            ctx.quadraticCurveTo(b.trail[k].x,b.trail[k].y,cx2,cy2);
-          }
-          ctx.lineTo(b.x,b.y);
-          var trailAlpha=b.singing>0?0.5:0.25;
-          ctx.strokeStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+trailAlpha+')';
-          ctx.lineWidth=b.size*0.5;
-          ctx.stroke();
-        }
-
-        // Singing glow (pulsing outer aura when calling)
-        if(b.singing>0){
-          var pulse=(Math.sin(b.singing*0.2)+1)*0.5;
-          var glowR=b.size*5+pulse*8;
-          ctx.beginPath();
-          ctx.arc(b.x,b.y,glowR,0,TAU);
-          ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+(0.06+pulse*0.06)+')';
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(b.x,b.y,glowR*0.5,0,TAU);
-          ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+(0.1+pulse*0.08)+')';
-          ctx.fill();
-        }
-
-        // Soft outer glow (always)
-        ctx.beginPath();
-        ctx.arc(b.x,b.y,b.size*2.5,0,TAU);
-        ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+',0.06)';
-        ctx.fill();
-
-        // Core bright dot
-        var coreAlpha=b.singing>0?1:0.8;
-        var coreSize=b.singing>0?b.size*1.2:b.size*0.7;
-        ctx.beginPath();
-        ctx.arc(b.x,b.y,coreSize,0,TAU);
-        ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+coreAlpha+')';
-        ctx.fill();
-      }
-
-      // ===== SOUND WAVE RINGS =====
-      for(var e=callEffects.length-1;e>=0;e--){
-        var ef=callEffects[e];
-        var age=(fc-ef.frame)/(ef.type==='bird'?120:70);
-        if(age>1){callEffects.splice(e,1);continue;}
-        var maxR=ef.type==='bird'?140:60;
-        var fade=1-age;
-        // 3 concentric expanding rings
-        for(var ring=0;ring<3;ring++){
-          var rr=age*maxR*(0.4+ring*0.3);
-          var ra=fade*(0.25-ring*0.07);
-          if(ra<=0)continue;
-          ctx.beginPath();
-          ctx.arc(ef.x,ef.y,rr,0,TAU);
-          ctx.strokeStyle='rgba('+ef.color[0]+','+ef.color[1]+','+ef.color[2]+','+ra+')';
-          ctx.lineWidth=1.8-ring*0.5;
-          ctx.stroke();
+          pixels[idx]     = (r * intensity) | 0;
+          pixels[idx + 1] = (g * intensity) | 0;
+          pixels[idx + 2] = (b * intensity) | 0;
+          pixels[idx + 3] = 255;
         }
       }
 
-      // ===== AUDIO TRIGGERS =====
-      if(audioReady && !muted){
-        // Bird call every 3-8 seconds
-        if(now-lastBirdTime > 3+Math.random()*5){
-          lastBirdTime=now;
-          var rb=boids[Math.floor(Math.random()*boids.length)];
-          if(rb) playBird(rb);
-        }
-        // Mouse proximity trigger
-        if(boids.length>0){
-          var mb=boids[Math.floor(Math.random()*boids.length)];
-          var mdx2=mouseX-mb.x,mdy2=mouseY-mb.y;
-          if(Math.sqrt(mdx2*mdx2+mdy2*mdy2)<120 && Math.random()<0.003) playBird(mb);
-        }
-        // Cricket chirps every 2-4 seconds
-        if(now-lastCricketTime > 2+Math.random()*2){
-          lastCricketTime=now;
-          playCricket(Math.random()*W, H*0.6+Math.random()*H*0.4);
-        }
-      }
+      offCtx.putImageData(imageData, 0, 0);
+
+      // Scale up to full canvas with smoothing for soft blend
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(offCanvas, 0, 0, W, H);
 
       requestAnimationFrame(frame);
     }
 
-    resize(); frame();
-    var rt; window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(resize,200);});
+    resize();
+    frame();
+    var rt;
+    window.addEventListener('resize', function() {
+      clearTimeout(rt);
+      rt = setTimeout(resize, 200);
+    });
   })();
   </script>
 
@@ -447,8 +226,8 @@
             <span class="project-status status-active">Active R&amp;D / Patent Pending</span>
           </div>
           <p class="project-context">FPGA Modular Synthesizer Platform &middot; SystemVerilog</p>
-          <div class="project-diagram">
-            <img src="diagrams/gateless-gate-panel.svg" alt="The Gateless Gate — 34HP Eurorack panel design" loading="lazy">
+          <div class="project-image">
+            <img src="images/screenshots/gateless-gate-panel.png" alt="The Gateless Gate — illuminated front panel" loading="lazy">
           </div>
           <div class="project-diagram">
             <img src="diagrams/gateless-gate.png" alt="The Gateless Gate FPGA architecture" loading="lazy">
@@ -559,6 +338,18 @@
             <span class="project-status status-active">Research / Plugin</span>
           </div>
           <p class="project-context">Virtual Analog + Neural Hybrid Architecture &middot; C++/Python/ONNX</p>
+          <div class="project-image">
+            <img src="images/screenshots/mlems-fan-ui.png" alt="MLEMS Synthi Filter plugin UI" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/mlems-hybrid-architecture.png" alt="Hybrid VA + Neural Architecture diagram" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/mlems-va-ladder-filter.png" alt="4-Pole VA Ladder Filter with feedback saturation" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/mlems-training-flow.png" alt="Hybrid residual training data flow" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/mlems-synthi.png" alt="MLEMS Synthi hybrid VA+Neural architecture" loading="lazy">
           </div>
@@ -594,6 +385,9 @@
             <span class="project-status status-completed">Released</span>
           </div>
           <p class="project-context">Lexicon-Inspired Dual-Tank FDN Reverb &middot; C++</p>
+          <div class="project-image">
+            <img src="images/screenshots/teorainn-web-ui.png" alt="teorainn web interface" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/teorainn.png" alt="teorainn FDN reverb architecture" loading="lazy">
           </div>
@@ -673,6 +467,15 @@
             <span class="project-status status-completed">Completed</span>
           </div>
           <p class="project-context">Serge Resonant Equaliser for Bela &middot; C++</p>
+          <div class="project-image">
+            <img src="images/screenshots/bela-serge-plate.png" alt="Resonant plate reverb in wooden frame" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/bela-serge-hardware.png" alt="Bela board connected to plate reverb with transducers" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/bela-serge-signal-flow.png" alt="Re:verb system signal flow diagram" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/bela-serge-reseq.png" alt="Bela Serge Resonant Equaliser architecture" loading="lazy">
           </div>
@@ -750,6 +553,9 @@
             <span class="project-status status-completed">Completed</span>
           </div>
           <p class="project-context">EMS Stockholm + NTNU/AAU Research</p>
+          <div class="project-image">
+            <img src="images/screenshots/binaural-gui-main.png" alt="Binaural HRTF spatial audio GUI" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/binaural-hrtf.png" alt="Binaural HRTF processing pipeline" loading="lazy">
           </div>
@@ -810,6 +616,9 @@
             <span class="project-status status-dev">In Development</span>
           </div>
           <p class="project-context">Real-Time Emotion Detection &rarr; Modular Synthesis &middot; C++/Python</p>
+          <div class="project-image">
+            <img src="images/screenshots/emotion-dsp-mapping.png" alt="EmotionToCV emotion-to-DSP parameter mapping" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/emotion-to-cv.png" alt="EmotionToCV pipeline architecture" loading="lazy">
           </div>
@@ -841,6 +650,21 @@
             <span class="project-status status-active">Active Research</span>
           </div>
           <p class="project-context">Adaptive VR/Mobile Sensory Platform &middot; Unity/Godot/C++</p>
+          <div class="project-image">
+            <img src="images/screenshots/neuroverse-phenotype-ui.png" alt="Neuroverse phenotype classifier UI" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/neuroverse-menu-panels.png" alt="Neuroverse VR menu panels" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/neuroverse-system-architecture.png" alt="Neuroverse VR Behavioral Profiling Pipeline" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/neuroverse-phenotype-radar.png" alt="Six Sensory Phenotypes behavioral profile comparison" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/neuroverse-sound-settings.png" alt="Neuroverse VR sound settings with EQ and reverb controls" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/neuroverse.png" alt="Neuroverse adaptive sensory platform architecture" loading="lazy">
           </div>
@@ -947,6 +771,12 @@
             <span class="project-status status-dev">In Development</span>
           </div>
           <p class="project-context">OTO Machines &middot; Plinky &middot; C++/JUCE</p>
+          <div class="project-image">
+            <img src="images/screenshots/oto-all-plugins.png" alt="OTOInterface Pro — all plugin UIs" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/plinky-interface-ui.png" alt="PlinkyInterface Pro plugin UI" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/hw-preset-managers.png" alt="Hardware synth preset manager architecture" loading="lazy">
           </div>
@@ -1109,6 +939,9 @@
             <span class="project-status status-completed">Completed</span>
           </div>
           <p class="project-context">Theory to Real-Time Implementation &middot; Python + C++</p>
+          <div class="project-image">
+            <img src="images/screenshots/guitar-physical-model-ui.png" alt="Guitar physical modeling JUCE plugin UI" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/guitar-physical-model.png" alt="Guitar physical modeling pipeline" loading="lazy">
           </div>
@@ -1139,6 +972,15 @@
             <span class="project-status status-research">Academic / Field Research</span>
           </div>
           <p class="project-context"><a href="https://ziforge.github.io/gaulosen-study/" target="_blank" rel="noopener">Gaulossen Nature Reserve</a> &middot; BirdNET &middot; Praven Pro</p>
+          <div class="project-image">
+            <img src="images/screenshots/gaulosen-field-deployment.jpg" alt="Gaulosen Nature Reserve field recorder deployment" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/gaulosen-cooccurrence.png" alt="Species co-occurrence network analysis" loading="lazy">
+          </div>
+          <div class="project-image">
+            <img src="images/screenshots/gaulosen-spectrogram-crane.png" alt="Common crane spectrogram analysis" loading="lazy">
+          </div>
           <div class="project-diagram">
             <img src="diagrams/bioacoustics.png" alt="Bioacoustics research pipeline" loading="lazy">
           </div>
