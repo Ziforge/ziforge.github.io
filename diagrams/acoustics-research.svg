@@ -1,0 +1,58 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- TLM Simulation -->
+  <rect x="15" y="25" width="130" height="95" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="80" y="47" text-anchor="middle" fill="#e8a835" class="subtitle">TLM SIMULATION</text>
+  <line x1="27" y1="54" x2="133" y2="54" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="80" y="70" text-anchor="middle" fill="#ccc" class="detail">2D Pipe Model</text>
+  <text x="80" y="84" text-anchor="middle" fill="#999" class="tiny">Scattering Matrix</text>
+  <text x="80" y="96" text-anchor="middle" fill="#999" class="tiny">Boundary Cond.</text>
+  <text x="80" y="108" text-anchor="middle" fill="#999" class="tiny">Wave Propagation</text>
+
+  <!-- Waveguide -->
+  <rect x="160" y="25" width="120" height="95" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="220" y="47" text-anchor="middle" fill="#e8a835" class="subtitle">WAVEGUIDE</text>
+  <line x1="172" y1="54" x2="268" y2="54" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="220" y="70" text-anchor="middle" fill="#ccc" class="detail">1D Instrument</text>
+  <text x="220" y="84" text-anchor="middle" fill="#999" class="tiny">Delay Lines</text>
+  <text x="220" y="96" text-anchor="middle" fill="#999" class="tiny">Reflection</text>
+  <text x="220" y="108" text-anchor="middle" fill="#999" class="tiny">Excitation</text>
+
+  <!-- F0 Analysis -->
+  <rect x="295" y="25" width="130" height="95" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="2"/>
+  <text x="360" y="47" text-anchor="middle" fill="#e8a835" class="subtitle">F0 ANALYSIS</text>
+  <line x1="307" y1="54" x2="413" y2="54" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="360" y="70" text-anchor="middle" fill="#ccc" class="detail">Multi-Method</text>
+  <text x="360" y="84" text-anchor="middle" fill="#999" class="tiny">SHS Consensus</text>
+  <text x="360" y="96" text-anchor="middle" fill="#999" class="tiny">YIN / Cepstrum</text>
+  <text x="360" y="108" text-anchor="middle" fill="#999" class="tiny">MFCC / Harmonic</text>
+
+  <!-- Psychoacoustics -->
+  <rect x="440" y="25" width="125" height="95" rx="6" fill="rgba(91,192,190,0.05)" stroke="rgba(91,192,190,0.5)" stroke-width="1"/>
+  <text x="502" y="47" text-anchor="middle" fill="#5bc0be" class="subtitle">PSYCHOACOUSTICS</text>
+  <line x1="452" y1="54" x2="553" y2="54" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="502" y="70" text-anchor="middle" fill="#999" class="tiny">Perception</text>
+  <text x="502" y="84" text-anchor="middle" fill="#999" class="tiny">Room Acoustics</text>
+  <text x="502" y="96" text-anchor="middle" fill="#999" class="tiny">Denoising</text>
+  <text x="502" y="108" text-anchor="middle" fill="#999" class="tiny">Modelling</text>
+
+  <!-- Interactive Notebooks -->
+  <rect x="580" y="25" width="120" height="95" rx="6" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.3)" stroke-width="1"/>
+  <text x="640" y="47" text-anchor="middle" fill="#5bc0be" class="subtitle">NOTEBOOKS</text>
+  <line x1="592" y1="54" x2="688" y2="54" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="640" y="70" text-anchor="middle" fill="#999" class="tiny">Interactive Study</text>
+  <text x="640" y="84" text-anchor="middle" fill="#999" class="tiny">Calculators</text>
+  <text x="640" y="96" text-anchor="middle" fill="#999" class="tiny">Concept Maps</text>
+  <text x="640" y="108" text-anchor="middle" fill="#999" class="tiny">Visualisation</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">ACOUSTIC SIGNAL PROCESSING &middot; TLM &middot; WAVEGUIDE &middot; F0 &middot; MFCC &middot; PYTHON / MATLAB</text>
+</svg>

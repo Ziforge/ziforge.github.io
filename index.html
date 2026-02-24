@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>George Howard Redpath — FPGA Audio Engineer | DSP Researcher | Instrument Designer</title>
+  <meta name="description" content="Portfolio of George Howard Redpath — FPGA audio engineering, DSP research, physical modeling synthesis, and instrument design.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Favicon (replace with your own) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Background canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <!-- Audio toggle -->
+  <button id="audio-toggle" title="Toggle sound" style="position:fixed;bottom:1rem;right:1rem;z-index:50;background:rgba(10,10,10,0.8);border:1px solid #222;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;transition:color 0.2s,border-color 0.2s;">
+    <svg id="audio-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+  </button>
+  <script>
+  (function(){
+    var canvas = document.getElementById('bg-canvas');
+    var ctx = canvas.getContext('2d');
+    var W, H, fc = 0;
+    var boids = [];
+    var callEffects = [];
+    var mouseX = -9999, mouseY = -9999;
+
+    // ===== BOID PARAMETERS =====
+    var COUNT = 350, TRAIL = 10;
+    var MAX_SPEED = 3.5, MAX_FORCE = 0.15;
+    var SEP_DIST = 30, ALI_DIST = 80, COH_DIST = 120;
+    var SEP_W = 2.0, ALI_W = 1.0, COH_W = 0.8;
+    var MOUSE_DIST = 250, MOUSE_W = 1.5;
+    var EDGE_M = 60, EDGE_F = 0.3;
+    var PI = Math.PI, TAU = PI * 2;
+
+    var COLORS = [[232,168,53],[210,140,40],[91,192,190],[120,200,180],[200,180,80],[180,120,50]];
+
+    // ===== BIRD SPECIES (from Verdant Drift Mindlin-Laje syrinx model) =====
+    var SPECIES = [
+      { name:'blackbird', freq:2200, dur:0.45,
+        alpha:function(t){ return 0.4 + Math.sin(t*25)*0.01; },
+        beta:function(t){ var e=t<0.1?t/0.1:t>0.85?(1-t)/0.15:1; return 0.45*e; }},
+      { name:'great_tit', freq:4500, dur:0.35,
+        alpha:function(t){ return (t*6%1)<0.4 ? 0.5 : 0.25; },
+        beta:function(t){ var p=t*6%1; var ne=p<0.35?Math.sin(p/0.35*PI):0; var e=t<0.08?t/0.08:t>0.9?(1-t)/0.1:1; return 0.4*ne*e; }},
+      { name:'wren', freq:5500, dur:0.5,
+        alpha:function(t){ return 0.45+Math.sin(t*350)*0.08; },
+        beta:function(t){ var e=t<0.05?t/0.05:t>0.8?(1-t)/0.2:1; return 0.5*e; }},
+      { name:'robin', freq:3800, dur:0.25,
+        alpha:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.45,0.35,0.5,0.3,0.42][Math.min(n,4)]+Math.sin(w*TAU)*0.03; },
+        beta:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.4,0.35,0.45,0.3,0.4][Math.min(n,4)]*Math.sin(w*PI); }},
+      { name:'wood_pigeon', freq:500, dur:0.7,
+        alpha:function(t){ var n=Math.floor(t*5); return [0.15,0.25,0.15,0.12,0.12][Math.min(n,4)]; },
+        beta:function(t){ var n=Math.floor(t*5); var w=t*5%1; return [0.3,0.5,0.3,0.25,0.25][Math.min(n,4)]*Math.sin(w*PI); }}
+    ];
+
+    // ===== AUDIO SYSTEM =====
+    var audioCtx=null, masterGain=null, audioReady=false, muted=false;
+    var birdBuffers=[], cricketBuf=null;
+    var lastBirdTime=0, lastCricketTime=0;
+
+    // Mindlin-Laje syrinx acceleration: dy/dt = -a*x - b*x*|x| - x^3 + b*g*sign(x)*y^2
+    function SA(x,y,a,b,g){ return -a*x - b*x*Math.abs(x) - x*x*x + b*g*(x>=0?1:-1)*y*y; }
+
+    function rk4Step(x,y,a,b,g,dt){
+      // Proper RK4 for coupled ODE: dx/dt=y, dy/dt=SA(x,y,a,b,g)
+      var k1x=y, k1y=SA(x,y,a,b,g);
+      var k2x=y+0.5*dt*k1y, k2y=SA(x+0.5*dt*k1x,y+0.5*dt*k1y,a,b,g);
+      var k3x=y+0.5*dt*k2y, k3y=SA(x+0.5*dt*k2x,y+0.5*dt*k2y,a,b,g);
+      var k4x=y+dt*k3y, k4y=SA(x+dt*k3x,y+dt*k3y,a,b,g);
+      return {
+        x: x+(dt/6)*(k1x+2*k2x+2*k3x+k4x),
+        y: y+(dt/6)*(k1y+2*k2y+2*k3y+k4y)
+      };
+    }
+
+    function synthBird(sp){
+      var sr=audioCtx.sampleRate, n=Math.floor(sp.dur*sr);
+      var buf=audioCtx.createBuffer(1,n,sr), data=buf.getChannelData(0);
+      // Single labium — dual labia with opposite phases cancel out
+      // Output velocity (y) not position, matching Godot model
+      var x=0.01, y=0, gamma=0.15, steps=8;
+      var peak=0;
+      for(var i=0;i<n;i++){
+        var t=i/n, alpha=sp.alpha(t), beta=sp.beta(t);
+        var omega=TAU*sp.freq, sdt=(1/sr)*omega/steps;
+        for(var s=0;s<steps;s++){
+          var r=rk4Step(x,y,alpha,beta,gamma,sdt);
+          x=r.x; y=r.y;
+        }
+        x=Math.max(-10,Math.min(10,x)); y=Math.max(-10,Math.min(10,y));
+        var env=1; if(t<0.08)env=t/0.08; if(t>0.85)env=(1-t)/0.15;
+        var sample=y*env;
+        sample+=(Math.random()-0.5)*0.005*beta;
+        data[i]=sample;
+        if(Math.abs(sample)>peak) peak=Math.abs(sample);
+      }
+      // Normalize to 0.5 peak
+      if(peak>0.001) for(var i=0;i<n;i++) data[i]*=0.5/peak;
+      // Fallback: if model produced silence, generate FM chirp
+      if(peak<=0.001){
+        for(var i=0;i<n;i++){
+          var t=i/n, env2=Math.sin(t*PI);
+          var mod=Math.sin(TAU*sp.freq*0.5*t*sp.dur+Math.sin(TAU*sp.freq*2*t*sp.dur)*0.3);
+          data[i]=mod*env2*0.4;
+        }
+      }
+      return buf;
+    }
+
+    function synthCricket(){
+      // Cricket stridulation: tooth-strike impulses through wing membrane resonator
+      // From Verdant Drift InsectStridulationModel — 4500Hz, Q=25, 4 pulses/chirp
+      var sr=audioCtx.sampleRate, dur=0.35, n=Math.floor(dur*sr);
+      var buf=audioCtx.createBuffer(1,n,sr), data=buf.getChannelData(0);
+      var wingF=4500+Math.random()*300, wingQ=25;
+      var w1=0,w2=0, pulses=4, pDur=dur/(pulses*2.5);
+      for(var i=0;i<n;i++){
+        var t=i/sr;
+        // Generate tooth-strike impulses
+        var imp=0, pIdx=Math.floor(t/pDur), within=(t%pDur)/pDur;
+        if(pIdx%2===0 && pIdx<pulses*2){
+          var filePos=(pIdx/2)/pulses;
+          if(within<0.15) imp=Math.sin(within/0.15*PI)*Math.sin(filePos*PI)*(0.8+Math.random()*0.4);
+        }
+        // Wing membrane bandpass resonator (biquad)
+        var om=TAU*wingF/sr, al=Math.sin(om)/(2*wingQ);
+        var b0=al/(1+al), b2=-al/(1+al), a1=-2*Math.cos(om)/(1+al), a2=(1-al)/(1+al);
+        var out=b0*imp+w1; w1=-a1*out+w2; w2=b2*imp-a2*out;
+        var cEnv=Math.sin(t/dur*PI); // chirp envelope
+        data[i]=Math.tanh(out*2)*0.5*cEnv;
+      }
+      return buf;
+    }
+
+    function initAudio(){
+      try{
+        audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+        masterGain=audioCtx.createGain();
+        masterGain.gain.value=0.35;
+        masterGain.connect(audioCtx.destination);
+        audioCtx.resume();
+        // Generate 2 variations per bird species
+        for(var s=0;s<SPECIES.length;s++){
+          birdBuffers.push(synthBird(SPECIES[s]));
+          // Second variation with slight pitch shift
+          var sp2=Object.assign({},SPECIES[s]);
+          sp2.freq=SPECIES[s].freq*(0.92+Math.random()*0.16);
+          birdBuffers.push(synthBird(sp2));
+        }
+        // Generate 3 cricket variations
+        for(var c=0;c<3;c++) birdBuffers.push(null); // placeholder
+        cricketBuf=synthCricket();
+        audioReady=true;
+      }catch(e){}
+    }
+
+    function playBird(b){
+      if(!audioReady||muted)return;
+      var idx=Math.floor(Math.random()*SPECIES.length)*2+Math.floor(Math.random()*2);
+      if(!birdBuffers[idx])return;
+      var src=audioCtx.createBufferSource(); src.buffer=birdBuffers[idx];
+      var g=audioCtx.createGain(); g.gain.value=0.12+Math.random()*0.12;
+      var pan=audioCtx.createStereoPanner(); pan.pan.value=Math.max(-1,Math.min(1,(b.x/W)*2-1));
+      src.playbackRate.value=0.9+Math.random()*0.2;
+      src.connect(g); g.connect(pan); pan.connect(masterGain); src.start();
+      // Visual feedback
+      b.singing=90;
+      callEffects.push({x:b.x,y:b.y,frame:fc,color:b.color,type:'bird'});
+    }
+
+    function playCricket(cx,cy){
+      if(!audioReady||muted||!cricketBuf)return;
+      var src=audioCtx.createBufferSource(); src.buffer=cricketBuf;
+      var g=audioCtx.createGain(); g.gain.value=0.04+Math.random()*0.04;
+      var pan=audioCtx.createStereoPanner(); pan.pan.value=Math.max(-1,Math.min(1,(cx/W)*2-1));
+      src.playbackRate.value=0.85+Math.random()*0.3;
+      src.connect(g); g.connect(pan); pan.connect(masterGain); src.start();
+      callEffects.push({x:cx,y:cy,frame:fc,color:[91,192,190],type:'cricket'});
+    }
+
+    // Init audio on first interaction
+    // IMPORTANT: mousemove is NOT a user activation in Chrome — AudioContext stays suspended
+    // Must resume on click/keydown (actual user activations)
+    var audioInited=false;
+    function tryInitAudio(){
+      if(!audioInited){audioInited=true;initAudio();}
+      if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+    }
+    document.addEventListener('click',tryInitAudio);
+    document.addEventListener('keydown',tryInitAudio,{once:true});
+
+    // Mute toggle
+    var toggleBtn=document.getElementById('audio-toggle');
+    if(toggleBtn) toggleBtn.addEventListener('click',function(e){
+      // Don't stopPropagation — let click bubble to tryInitAudio for AudioContext resume
+      muted=!muted;
+      if(masterGain) masterGain.gain.value=muted?0:0.35;
+      toggleBtn.style.color=muted?'#333':'#666';
+      toggleBtn.style.borderColor=muted?'#1a1a1a':'#222';
+    });
+
+    // ===== BOID CREATION =====
+    function makeBoid(){
+      var angle=Math.random()*TAU, spd=1+Math.random()*2;
+      var ci=Math.floor(Math.random()*COLORS.length);
+      var si=Math.floor(Math.random()*SPECIES.length);
+      return {
+        x:Math.random()*W, y:Math.random()*H,
+        vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd,
+        trail:[], color:COLORS[ci], size:1.5+Math.random()*1.5,
+        species:si, wingPhase:Math.random()*TAU,
+        singing:0
+      };
+    }
+
+    function resize(){
+      W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight;
+      var target=Math.min(COUNT,Math.floor((W*H)/3500));
+      while(boids.length<target)boids.push(makeBoid());
+      while(boids.length>target)boids.pop();
+    }
+
+    document.addEventListener('mousemove',function(e){mouseX=e.clientX;mouseY=e.clientY;},{passive:true});
+    document.addEventListener('mouseleave',function(){mouseX=-9999;mouseY=-9999;});
+
+    function limit(vx,vy,max){
+      var m=Math.sqrt(vx*vx+vy*vy);
+      if(m>max&&m>0){vx=(vx/m)*max;vy=(vy/m)*max;}
+      return{x:vx,y:vy};
+    }
+
+    // ===== MAIN LOOP =====
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      fc++;
+      var now=fc/60; // approximate seconds
+
+      for(var i=0;i<boids.length;i++){
+        var b=boids[i];
+        var sepX=0,sepY=0,sepN=0,aliX=0,aliY=0,aliN=0,cohX=0,cohY=0,cohN=0;
+
+        for(var j=0;j<boids.length;j++){
+          if(i===j)continue;
+          var o=boids[j], dx=b.x-o.x, dy=b.y-o.y;
+          var d=Math.sqrt(dx*dx+dy*dy);
+          if(d<SEP_DIST&&d>0){sepX+=dx/d/d;sepY+=dy/d/d;sepN++;}
+          if(d<ALI_DIST){aliX+=o.vx;aliY+=o.vy;aliN++;}
+          if(d<COH_DIST){cohX+=o.x;cohY+=o.y;cohN++;}
+        }
+
+        var ax=0,ay=0;
+        if(sepN>0){var s=limit(sepX,sepY,MAX_SPEED);ax+=s.x*SEP_W;ay+=s.y*SEP_W;}
+        if(aliN>0){var a2=limit(aliX/aliN-b.vx,aliY/aliN-b.vy,MAX_FORCE);ax+=a2.x*ALI_W;ay+=a2.y*ALI_W;}
+        if(cohN>0){var c2=limit(cohX/cohN-b.x,cohY/cohN-b.y,MAX_FORCE);ax+=c2.x*COH_W;ay+=c2.y*COH_W;}
+
+        var mdx=mouseX-b.x,mdy=mouseY-b.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+        if(md<MOUSE_DIST&&md>1){var mf=(1-md/MOUSE_DIST);ax+=(mdx/md)*mf*MOUSE_W;ay+=(mdy/md)*mf*MOUSE_W;}
+
+        if(b.x<EDGE_M)ax+=(EDGE_M-b.x)/EDGE_M*EDGE_F;
+        if(b.x>W-EDGE_M)ax-=(b.x-(W-EDGE_M))/EDGE_M*EDGE_F;
+        if(b.y<EDGE_M)ay+=(EDGE_M-b.y)/EDGE_M*EDGE_F;
+        if(b.y>H-EDGE_M)ay-=(b.y-(H-EDGE_M))/EDGE_M*EDGE_F;
+
+        b.vx+=ax;b.vy+=ay;
+        var v=limit(b.vx,b.vy,MAX_SPEED);b.vx=v.x;b.vy=v.y;
+        b.x+=b.vx;b.y+=b.vy;
+        if(b.x<-20)b.x=W+20;if(b.x>W+20)b.x=-20;
+        if(b.y<-20)b.y=H+20;if(b.y>H+20)b.y=-20;
+
+        b.trail.push({x:b.x,y:b.y}); if(b.trail.length>TRAIL)b.trail.shift();
+        if(b.singing>0) b.singing--;
+
+        // Draw smooth trail
+        if(b.trail.length>2){
+          ctx.beginPath();
+          ctx.moveTo(b.trail[0].x,b.trail[0].y);
+          for(var k=1;k<b.trail.length-1;k++){
+            var cx2=(b.trail[k].x+b.trail[k+1].x)*0.5;
+            var cy2=(b.trail[k].y+b.trail[k+1].y)*0.5;
+            ctx.quadraticCurveTo(b.trail[k].x,b.trail[k].y,cx2,cy2);
+          }
+          ctx.lineTo(b.x,b.y);
+          var trailAlpha=b.singing>0?0.5:0.25;
+          ctx.strokeStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+trailAlpha+')';
+          ctx.lineWidth=b.size*0.5;
+          ctx.stroke();
+        }
+
+        // Singing glow (pulsing outer aura when calling)
+        if(b.singing>0){
+          var pulse=(Math.sin(b.singing*0.2)+1)*0.5;
+          var glowR=b.size*5+pulse*8;
+          ctx.beginPath();
+          ctx.arc(b.x,b.y,glowR,0,TAU);
+          ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+(0.06+pulse*0.06)+')';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(b.x,b.y,glowR*0.5,0,TAU);
+          ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+(0.1+pulse*0.08)+')';
+          ctx.fill();
+        }
+
+        // Soft outer glow (always)
+        ctx.beginPath();
+        ctx.arc(b.x,b.y,b.size*2.5,0,TAU);
+        ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+',0.06)';
+        ctx.fill();
+
+        // Core bright dot
+        var coreAlpha=b.singing>0?1:0.8;
+        var coreSize=b.singing>0?b.size*1.2:b.size*0.7;
+        ctx.beginPath();
+        ctx.arc(b.x,b.y,coreSize,0,TAU);
+        ctx.fillStyle='rgba('+b.color[0]+','+b.color[1]+','+b.color[2]+','+coreAlpha+')';
+        ctx.fill();
+      }
+
+      // ===== SOUND WAVE RINGS =====
+      for(var e=callEffects.length-1;e>=0;e--){
+        var ef=callEffects[e];
+        var age=(fc-ef.frame)/(ef.type==='bird'?120:70);
+        if(age>1){callEffects.splice(e,1);continue;}
+        var maxR=ef.type==='bird'?140:60;
+        var fade=1-age;
+        // 3 concentric expanding rings
+        for(var ring=0;ring<3;ring++){
+          var rr=age*maxR*(0.4+ring*0.3);
+          var ra=fade*(0.25-ring*0.07);
+          if(ra<=0)continue;
+          ctx.beginPath();
+          ctx.arc(ef.x,ef.y,rr,0,TAU);
+          ctx.strokeStyle='rgba('+ef.color[0]+','+ef.color[1]+','+ef.color[2]+','+ra+')';
+          ctx.lineWidth=1.8-ring*0.5;
+          ctx.stroke();
+        }
+      }
+
+      // ===== AUDIO TRIGGERS =====
+      if(audioReady && !muted){
+        // Bird call every 3-8 seconds
+        if(now-lastBirdTime > 3+Math.random()*5){
+          lastBirdTime=now;
+          var rb=boids[Math.floor(Math.random()*boids.length)];
+          if(rb) playBird(rb);
+        }
+        // Mouse proximity trigger
+        if(boids.length>0){
+          var mb=boids[Math.floor(Math.random()*boids.length)];
+          var mdx2=mouseX-mb.x,mdy2=mouseY-mb.y;
+          if(Math.sqrt(mdx2*mdx2+mdy2*mdy2)<120 && Math.random()<0.003) playBird(mb);
+        }
+        // Cricket chirps every 2-4 seconds
+        if(now-lastCricketTime > 2+Math.random()*2){
+          lastCricketTime=now;
+          playCricket(Math.random()*W, H*0.6+Math.random()*H*0.4);
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    resize(); frame();
+    var rt; window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(resize,200);});
+  })();
+  </script>
+
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav>
+    <div class="container">
+      <a href="#hero" class="nav-logo">ziforge<span>_</span></a>
+      <ul class="nav-links">
+        <li><a href="#projects">projects</a></li>
+        <li><a href="#skills">skills</a></li>
+        <li><a href="#experience">experience</a></li>
+        <li><a href="#education">education</a></li>
+        <li><a href="#publications">publications</a></li>
+        <li><a href="#contact">contact</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Scroll progress bar -->
+  <div id="scroll-progress"></div>
+
+  <!-- ==================== HERO ==================== -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-split">
+        <div class="hero-content">
+          <p class="hero-greeting">// hello world</p>
+          <h1 class="hero-name">George Howard Redpath</h1>
+          <p class="hero-tagline">
+            FPGA Audio<span class="separator">|</span>Physical Models<span class="separator">|</span>Virtual Analog<span class="separator">|</span>Machine Learning<span class="separator">|</span>Acoustics<span class="separator">|</span>DSP
+          </p>
+          <p class="hero-bio">
+            Nearly 5 years as an RF engineer at Arqiva. First Class Honours in Electronic Engineering &amp; RF.
+            Currently finishing an MSc in Sound &amp; Music Computing at Aalborg University Copenhagen.
+            13 years deep in modular synthesis. Former touring musician.
+            I design synthesizers, write DSP code, and train neural networks to sound like analog hardware.
+          </p>
+          <div class="hero-cta">
+            <a href="#projects" class="btn btn-primary">View Projects</a>
+            <a href="#contact" class="btn btn-outline">Get in Touch</a>
+          </div>
+        </div>
+        <div class="hero-photo">
+          <img src="images/ems-george-2025-insta.jpg" alt="George Redpath at Elektronmusikstudion (EMS), Stockholm 2025">
+          <span class="hero-photo-caption">EMS Stockholm &middot; 2025</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROJECTS ==================== -->
+  <section id="projects">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 01</p>
+        <h2 class="section-title">Projects</h2>
+        <hr class="section-rule">
+      </div>
+
+      <!-- ~~~~~ Synthesis & Instruments ~~~~~ -->
+      <h3 class="project-category reveal">Synthesis &amp; Instruments</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- The Gateless Gate -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">The Gateless Gate</h3>
+            <span class="project-status status-active">Active R&amp;D / Patent Pending</span>
+          </div>
+          <p class="project-context">FPGA Modular Synthesizer Platform &middot; SystemVerilog</p>
+          <div class="project-diagram">
+            <img src="diagrams/gateless-gate-panel.svg" alt="The Gateless Gate — 34HP Eurorack panel design" loading="lazy">
+          </div>
+          <div class="project-diagram">
+            <img src="diagrams/gateless-gate.png" alt="The Gateless Gate FPGA architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            An FPGA-based Eurorack modular synthesizer platform with a novel approach to
+            total recall &mdash; addressing one of the longest-standing limitations of modular synthesis.
+            Custom hardware and FPGA architecture designed from the ground up, combining
+            analog signal path design with digital intelligence.
+          </p>
+          <p class="project-desc">
+            Full 3U 104HP Eurorack case designed from scratch. Case and custom knobs 3D modelled
+            in OpenSCAD and 3D printed. Custom front panels with silkscreen artwork,
+            Thonkiconn jacks, and panel-mounted LEDs for visual feedback. The case is a purpose-built
+            enclosure with a custom-designed PSU (bus board, ribbon cables, regulated &plusmn;12V and +5V rails) designed
+            to house the complete system as a self-contained instrument. Every aspect of the physical
+            design &mdash; panel layout, knob spacing, ergonomics &mdash; is considered alongside the electronics.
+          </p>
+          <p class="project-desc">
+            Multi-layer PCB design with mixed-signal layout: analog signal paths kept separate from
+            digital FPGA logic, dedicated ground planes, and careful power regulation. The analog front end
+            uses precision op-amps and DC-coupled I/O for full Eurorack voltage range (&plusmn;12V rail,
+            &plusmn;5V signal). Custom codec/DAC stage for high-fidelity audio conversion between the
+            analog domain and FPGA fabric.
+          </p>
+          <div class="project-innovation">
+            <p><strong>Patent pending.</strong> Novel architecture enables capabilities not
+            currently available in any commercial modular synthesizer.</p>
+          </div>
+          <div class="project-tags">
+            <span class="tag">SystemVerilog</span>
+            <span class="tag">FPGA</span>
+            <span class="tag">Custom PCB</span>
+            <span class="tag">Analog Design</span>
+            <span class="tag">Eurorack</span>
+            <span class="tag">OpenSCAD</span>
+            <span class="tag">3D Printing</span>
+            <span class="tag">Panel Design</span>
+            <span class="tag">Mixed-Signal</span>
+          </div>
+        </article>
+
+        <!-- Physical Tape -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Physical Tape</h3>
+            <span class="project-status status-active">Production Ready</span>
+          </div>
+          <p class="project-context">GPU-Accelerated 3D Magnetic Tape Simulation &middot; C++/Metal</p>
+          <div class="project-diagram">
+            <img src="diagrams/physical-tape.png" alt="Physical Tape 3D GPU simulation architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Real-time magnetic tape saturation emulator using GPU-accelerated 3D simulation.
+            Models the nonlinear hysteresis of analog tape across a 65,536-point 3D grid
+            (64&times;256&times;4 &mdash; representing 6mm tape width, 5cm buffer, and 10&mu;m oxide depth)
+            with spatial diffusion using a 7-point stencil. Jiles-Atherton hysteresis model runs
+            per-grid-point with Langevin function anhysteretic magnetisation.
+            Includes tape cutting, splicing, looping, variable speed playback, and degradation effects.
+          </p>
+          <div class="project-innovation">
+            <p><strong>Key Innovation:</strong> Full PDE-based magnetic field simulation at real-time rates
+            via Metal GPU compute shaders dispatching 65,536 parallel threads. Frequency-dependent skin effect
+            and depth attenuation modelled across the oxide layer.</p>
+          </div>
+          <div class="project-tags">
+            <span class="tag">C++17</span>
+            <span class="tag">Metal GPU</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">Jiles-Atherton</span>
+            <span class="tag">PDE Solver</span>
+            <span class="tag">VST3/AU</span>
+          </div>
+        </article>
+
+        <!-- Piobaire -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">P&iacute;obaire</h3>
+            <span class="project-status status-dev">Work in Progress</span>
+          </div>
+          <p class="project-context">Waveguide Uilleann Pipes Synthesizer &middot; C++/Metal</p>
+          <div class="project-diagram">
+            <img src="diagrams/piobaire.png" alt="Piobaire waveguide synthesis architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Physics-based virtual instrument modelling Irish uilleann pipes using digital waveguide synthesis
+            with Metal GPU acceleration. Complete paraphonic pipe set: chanter (9-hole melody), 3 drones
+            (bass/baritone/tenor), and 3 regulators (keyed chords). Nonlinear reed excitation via Bernoulli
+            equation, Kelly-Lochbaum scattering junctions at tone holes, five bore profiles (cylindrical,
+            conical, hyperbolic, parabolic, stepped), material damping, and bell radiation modelling.
+            Metal compute shaders process 7 waveguide pairs + 9 tone holes + 13 regulator keys at 96kHz.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++17</span>
+            <span class="tag">Metal GPU</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">Waveguide Synthesis</span>
+            <span class="tag">Physical Modeling</span>
+            <span class="tag">VST3/AU</span>
+          </div>
+        </article>
+
+        <!-- MLEMS Synthi Filter -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">MLEMS Synthi Filter</h3>
+            <span class="project-status status-active">Research / Plugin</span>
+          </div>
+          <p class="project-context">Virtual Analog + Neural Hybrid Architecture &middot; C++/Python/ONNX</p>
+          <div class="project-diagram">
+            <img src="diagrams/mlems-synthi.png" alt="MLEMS Synthi hybrid VA+Neural architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            JUCE audio plugin emulating the EMS VCS3/Synthi diode ladder filter using a hybrid architecture:
+            physics-based virtual analog modelling with neural network enhancement for authentic nonlinear
+            characteristics. The VA model implements a 4-pole ladder topology with bilinear transform and
+            tanh soft saturation. A WaveNet model trained on 750 impulse responses captured from hardware
+            learns only the residual difference between the VA model and real hardware, running via ONNX Runtime.
+            Three filter modes (LP/HP/BP), three slope options (18/24/48 dB/oct). Includes separate
+            Python research environment for DSP prototyping and ML training pipeline.
+          </p>
+          <div class="project-innovation">
+            <p><strong>Key Innovation:</strong> Hybrid residual learning &mdash; the neural network corrects the
+            VA model's output rather than modelling the entire filter, dramatically reducing model size (~700KB)
+            while capturing the nonlinearities that make analog filters sound alive.</p>
+          </div>
+          <div class="project-tags">
+            <span class="tag">C++17</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">WaveNet</span>
+            <span class="tag">ONNX Runtime</span>
+            <span class="tag">PyTorch</span>
+            <span class="tag">Virtual Analog</span>
+            <span class="tag">VST3/AU</span>
+          </div>
+        </article>
+
+        <!-- teorainn -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">teorainn</h3>
+            <span class="project-status status-completed">Released</span>
+          </div>
+          <p class="project-context">Lexicon-Inspired Dual-Tank FDN Reverb &middot; C++</p>
+          <div class="project-diagram">
+            <img src="diagrams/teorainn.png" alt="teorainn FDN reverb architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Professional-quality algorithmic reverb inspired by the Lexicon 224/480L. Dual 8-delay feedback
+            delay networks with Hadamard orthogonal matrix mixing, RT60-based decay using modified Sabine equation,
+            4&times; modulated allpass prediffusion, and 7-tap early reflections. Includes time FX section
+            (delay, shimmer with pitch-shifting, chorus), HRTF crossfading, anti-blowup loop energy monitoring,
+            and safety limiter. Celtic-inspired UI with golden ratio spiral and triskele elements.
+            Evolved from a 24-hour WebAudio/WebMIDI hackathon prototype into a full JUCE plugin.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++17</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">FDN</span>
+            <span class="tag">Hadamard Matrix</span>
+            <span class="tag">RT60</span>
+            <span class="tag">WebAudio</span>
+            <span class="tag">VST3/AU</span>
+          </div>
+        </article>
+
+        <!-- EKS Extended -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">EKS Extended</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Extended Karplus-Strong Guitar Synthesizer &middot; Faust</p>
+          <div class="project-diagram">
+            <img src="diagrams/eks.png" alt="Extended Karplus-Strong feedback delay architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Physics-based plucked string synthesizer implementing Julius O. Smith's Extended
+            Karplus-Strong algorithm. Bidirectional delay line with linear-phase FIR3 damping,
+            pick-position comb filtering, dynamic-level lowpass compensation, and T60 decay modelling.
+            32-step sequencer with E minor pentatonic arpeggio patterns, stereo LFO panning,
+            and Zita reverb integration. Compiles to Web, JACK, VST, Daisy, and Bela targets.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Faust</span>
+            <span class="tag">Physical Modeling</span>
+            <span class="tag">Karplus-Strong</span>
+            <span class="tag">Web Audio</span>
+            <span class="tag">Bela</span>
+            <span class="tag">Daisy</span>
+          </div>
+        </article>
+
+        <!-- windgrain -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">windgrain</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Physical Model of Granular Collisions &middot; MATLAB</p>
+          <div class="project-diagram">
+            <img src="diagrams/windgrain.png" alt="windgrain collision physics pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Physical model of grains of sand colliding in space. Simulates the acoustic behaviour
+            of granular particle interactions, synthesising the resulting sounds from first-principles
+            physics rather than sample playback.
+          </p>
+          <div class="project-tags">
+            <span class="tag">MATLAB</span>
+            <span class="tag">Physical Modeling</span>
+            <span class="tag">Granular</span>
+            <span class="tag">Collision Physics</span>
+          </div>
+        </article>
+
+        <!-- BelaSergeResEQ -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">BelaSergeResEQ</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Serge Resonant Equaliser for Bela &middot; C++</p>
+          <div class="project-diagram">
+            <img src="diagrams/bela-serge-reseq.png" alt="Bela Serge Resonant Equaliser architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Implementation of the Serge Resonant Equaliser for the Bela embedded audio platform.
+            The Serge ResEQ is a classic analog module design &mdash; a bank of resonant bandpass filters
+            that can be driven into self-oscillation, functioning as both an equaliser and a sound source.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++</span>
+            <span class="tag">Bela</span>
+            <span class="tag">Embedded DSP</span>
+            <span class="tag">Filter Design</span>
+            <span class="tag">Serge</span>
+          </div>
+        </article>
+
+        <!-- OTO Biscuit Recreation -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">OTO Biscuit Recreation</h3>
+            <span class="project-status status-research">Research / Prototyping</span>
+          </div>
+          <p class="project-context">LM13700 OTA Analog Circuit Design</p>
+          <div class="project-diagram">
+            <img src="diagrams/oto-biscuit.png" alt="OTO Biscuit OTA circuit architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Analog circuit recreation of the OTO Biscuit synthesizer/effects processor using
+            LM13700 operational transconductance amplifiers. Detailed analysis and recreation
+            of the original circuit topology with focus on reproducing the nonlinear characteristics
+            of the OTA-based signal path.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Analog Design</span>
+            <span class="tag">LM13700 OTAs</span>
+            <span class="tag">SPICE</span>
+            <span class="tag">PCB Layout</span>
+          </div>
+        </article>
+
+      </div><!-- /synthesis grid -->
+
+      <!-- ~~~~~ Spatial Audio & Perception ~~~~~ -->
+      <h3 class="project-category reveal">Spatial Audio &amp; Perception</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- Harman Spatialisation -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Harman Spatialisation</h3>
+            <span class="project-status status-pro">Industry Collaboration</span>
+          </div>
+          <p class="project-context">Binaural &amp; Stereo Audio Processing &middot; Harman Corporation</p>
+          <div class="project-diagram">
+            <img src="diagrams/harman-spatial.png" alt="Harman spatial audio processing" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Research and development of binaural and stereo audio processing in collaboration
+            with Harman Corporation. Work on spatial audio rendering techniques for consumer
+            and professional audio applications.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Spatial Audio</span>
+            <span class="tag">Binaural</span>
+            <span class="tag">Stereo Processing</span>
+            <span class="tag">Harman</span>
+          </div>
+        </article>
+
+        <!-- Binaural & HRTF Systems -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Binaural &amp; HRTF Systems</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">EMS Stockholm + NTNU/AAU Research</p>
+          <div class="project-diagram">
+            <img src="diagrams/binaural-hrtf.png" alt="Binaural HRTF processing pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Comprehensive body of work in binaural spatial audio. Head-trackable HRTF rendering
+            with real-time adaptation to listener movement (EMS Stockholm). Woodworth spherical head
+            ITD model, Brown-Duda ILD filters, fractional delay interpolation, and HRIR synthesis.
+            MediaPipe-based head tracking with IRCAM-style room acoustics. Multiple implementations
+            spanning research prototypes through to production-grade real-time systems with
+            VST-grade parameter smoothing.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">Spatial Audio</span>
+            <span class="tag">HRTF/HRIR</span>
+            <span class="tag">ITD/ILD</span>
+            <span class="tag">Head Tracking</span>
+            <span class="tag">Real-time DSP</span>
+          </div>
+        </article>
+
+        <!-- WaveNet Analog Filter -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">WaveNet Analog Filter Emulation</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">EMS Stockholm &mdash; Guest Composer Residency</p>
+          <div class="project-diagram">
+            <img src="diagrams/wavenet-filter.png" alt="WaveNet analog filter emulation architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Neural network models using WaveNet and CNN architectures to emulate analog synthesizer filters.
+            Deep learning captures the nonlinear behaviour of analog circuits, producing convincing digital
+            recreations of analog filter characteristics. Research conducted during a guest composer residency
+            at Elektronmusikstudion (EMS) Stockholm.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">PyTorch</span>
+            <span class="tag">WaveNet</span>
+            <span class="tag">CNNs</span>
+            <span class="tag">Audio DSP</span>
+            <span class="tag">MATLAB</span>
+          </div>
+        </article>
+
+      </div><!-- /spatial grid -->
+
+      <!-- ~~~~~ Creative Technology ~~~~~ -->
+      <h3 class="project-category reveal">Creative Technology</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- EmotionToCV -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">EmotionToCV</h3>
+            <span class="project-status status-dev">In Development</span>
+          </div>
+          <p class="project-context">Real-Time Emotion Detection &rarr; Modular Synthesis &middot; C++/Python</p>
+          <div class="project-diagram">
+            <img src="diagrams/emotion-to-cv.png" alt="EmotionToCV pipeline architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Real-time emotion detection driving modular synthesizer control voltage. JUCE plugin version
+            uses OpenCV face detection, 68-point landmark tracking, and Mini-Xception CNN via ONNX Runtime
+            to output 7 CV channels, each modulated by a physics model matched to the emotion:
+            Lorenz attractor (angry), Duffing oscillator (disgust), mass-spring-damper (fear),
+            modal resonator (happy), breath model (sad), struck membrane (surprise), damped harmonic (neutral).
+            Companion Python version uses MediaPipe FaceMesh with OSC output to Max/MSP.
+            Optimised for Expert Sleepers ES-9/ES-8 DC-coupled outputs to Eurorack.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++</span>
+            <span class="tag">Python</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">OpenCV</span>
+            <span class="tag">ONNX Runtime</span>
+            <span class="tag">Chaos Theory</span>
+            <span class="tag">Eurorack CV</span>
+            <span class="tag">Max/MSP</span>
+          </div>
+        </article>
+
+        <!-- Neuroverse -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Neuroverse</h3>
+            <span class="project-status status-active">Active Research</span>
+          </div>
+          <p class="project-context">Adaptive VR/Mobile Sensory Platform &middot; Unity/Godot/C++</p>
+          <div class="project-diagram">
+            <img src="diagrams/neuroverse.png" alt="Neuroverse adaptive sensory platform architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            An adaptive platform building empathy between neurodivergent and neurotypical individuals
+            through shared, personalised sensory experiences. Phenotype-based audio adaptation using
+            Dunn's Sensory Processing Framework. Integrates multiple DSP research modules: bioacoustic
+            synthesis (cricket stridulation, avian syrinx), physical guitar, teorainn reverb, Physical Tape
+            saturation, RTNeural inference, and binaural spatialisation. Generative music system using
+            Markov melody generation and Eno-style coprime loop techniques. VR version (Unity/Meta Quest 3)
+            and mobile version (Godot 4 with C++ GDExtension audio engine).
+          </p>
+          <div class="project-tags">
+            <span class="tag">Unity</span>
+            <span class="tag">Godot</span>
+            <span class="tag">C#</span>
+            <span class="tag">C++ GDExtension</span>
+            <span class="tag">RTNeural</span>
+            <span class="tag">Meta Quest 3</span>
+            <span class="tag">ML.NET</span>
+          </div>
+        </article>
+
+        <!-- ERAE Polytone -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">ERAE Polytone</h3>
+            <span class="project-status status-dev">In Development</span>
+          </div>
+          <p class="project-context">Polychromatic Microtonal Isomorphic Controller &middot; Python</p>
+          <div class="project-diagram">
+            <img src="diagrams/erae-polytone.png" alt="ERAE Polytone microtonal controller pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Microtonal isomorphic controller for the ERAE II hexagonal touch surface. Supports arbitrary
+            N-TET tuning systems (12, 19, 31, 53, 106-TET), multiple isomorphic layouts (Wicki-Hayden,
+            Tonal Plexus), and colour schemes (hue wheel, polychromatic harmonic series, chromaplane).
+            MPE MIDI and OSC output. Direct hardware integration via ERAE II SysEx protocol for
+            real-time LED feedback on the touch surface.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">MPE MIDI</span>
+            <span class="tag">OSC</span>
+            <span class="tag">Microtonal</span>
+            <span class="tag">SysEx</span>
+            <span class="tag">ERAE II</span>
+          </div>
+        </article>
+
+        <!-- Verdant Drift -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Verdant Drift</h3>
+            <span class="project-status status-dev">In Development</span>
+          </div>
+          <p class="project-context">Proteus-Style Exploration Game &middot; Godot 4.5</p>
+          <div class="project-diagram">
+            <img src="diagrams/verdant-drift.png" alt="Verdant Drift procedural world and generative music" loading="lazy">
+          </div>
+          <p class="project-desc">
+            3D exploration game with generative bioacoustic music. Procedurally generated environments
+            where the soundtrack emerges from simulated ecosystems &mdash; the music is the world.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Godot 4.5</span>
+            <span class="tag">GDScript</span>
+            <span class="tag">Generative Music</span>
+            <span class="tag">Bioacoustics</span>
+            <span class="tag">Procedural</span>
+          </div>
+        </article>
+
+        <!-- vibe-ode -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">vibe-ode</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Live Audio Visualisation Dashboard &middot; Python</p>
+          <p class="project-desc">
+            Real-time audio visualisation dashboard for the terminal featuring VU meters,
+            oscilloscope display, and system metrics. Live audio analysis rendered directly
+            in the terminal.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">Audio Analysis</span>
+            <span class="tag">Real-time</span>
+            <span class="tag">Terminal UI</span>
+          </div>
+        </article>
+
+      </div><!-- /creative grid -->
+
+      <!-- ~~~~~ Audio Plugins & Tools ~~~~~ -->
+      <h3 class="project-category reveal">Audio Plugins &amp; Tools</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- HW Synth Preset Managers -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Hardware Synth Preset Managers</h3>
+            <span class="project-status status-dev">In Development</span>
+          </div>
+          <p class="project-context">OTO Machines &middot; Plinky &middot; C++/JUCE</p>
+          <div class="project-diagram">
+            <img src="diagrams/hw-preset-managers.png" alt="Hardware synth preset manager architecture" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Suite of JUCE-based audio plugins for managing presets and interfacing with
+            hardware synthesizers via MIDI SysEx. OTOInterface for OTO Machines devices
+            (Biscuit, BIM, BAM, Boum) with Pro upgrade path, PlinkyInterface for the Plinky
+            synthesizer, PlinkyBridge for anti-aliasing Plinky USB audio, and Plinky-VST
+            for direct DAW integration.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">MIDI SysEx</span>
+            <span class="tag">VST3/AU/AAX</span>
+            <span class="tag">Cross-platform</span>
+          </div>
+        </article>
+
+        <!-- IR Capture Plugin -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">IR Capture Plugin</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">ML Training Data Pipeline &middot; C++/JUCE</p>
+          <div class="project-diagram">
+            <img src="diagrams/ir-capture.png" alt="IR capture and ML training pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            JUCE audio plugin for capturing impulse responses from analog filters for machine learning
+            training. Automated sweep generation, capture, and cataloguing pipeline that produced the
+            750-file training dataset used for the MLEMS Synthi Filter neural model.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">IR Capture</span>
+            <span class="tag">ML Pipeline</span>
+            <span class="tag">VST3/AU</span>
+          </div>
+        </article>
+
+        <!-- Ableton LiveAPI Tools -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Ableton LiveAPI Tools</h3>
+            <span class="project-status status-completed">Released (Open Source)</span>
+          </div>
+          <p class="project-context">Thread-Safe Remote Script &middot; Python</p>
+          <div class="project-diagram">
+            <img src="diagrams/ableton-liveapi.png" alt="Ableton LiveAPI thread-safe remote script" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Thread-safe Python Remote Script for Ableton Live exposing 220+ LiveAPI tools
+            for external automation and control. Enables programmatic access to Live's internal
+            API for custom control surfaces, automation scripts, and integration workflows.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">Ableton Live</span>
+            <span class="tag">LiveAPI</span>
+            <span class="tag">Threading</span>
+            <span class="tag">Open Source</span>
+          </div>
+        </article>
+
+        <!-- CirklonSynthDefs -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">CirklonSynthDefs</h3>
+            <span class="project-status status-completed">Released (Open Source)</span>
+          </div>
+          <p class="project-context">Sequentix Cirklon Instrument Definitions</p>
+          <p class="project-desc">
+            Instrument definition files (.cki) for the Sequentix Cirklon hardware sequencer.
+            Comprehensive MIDI CC mappings for hardware synthesizers including Plinky (synth + sampler modes)
+            enabling full parameter control from the Cirklon.
+          </p>
+          <div class="project-tags">
+            <span class="tag">MIDI CC</span>
+            <span class="tag">Sequentix Cirklon</span>
+            <span class="tag">Hardware Integration</span>
+            <span class="tag">Open Source</span>
+          </div>
+        </article>
+
+        <!-- VCOTuner -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">VCOTuner</h3>
+            <span class="project-status status-completed">Released (Open Source)</span>
+          </div>
+          <p class="project-context">VCO Tuning Utility &middot; C++ &middot; macOS Fork</p>
+          <p class="project-desc">
+            Maintained fork of the VCOTuner utility updated to work on modern macOS.
+            Precision tuning tool for voltage-controlled oscillators in analog synthesizers.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C++</span>
+            <span class="tag">macOS</span>
+            <span class="tag">VCO</span>
+            <span class="tag">Open Source</span>
+          </div>
+        </article>
+
+        <!-- Plugin Licensing -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Plugin Licensing Infrastructure</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Commercial Distribution System &middot; Python</p>
+          <p class="project-desc">
+            Licensing and activation infrastructure for commercial audio plugin distribution.
+            Handles license generation, validation, and management across the plugin suite.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">Cryptography</span>
+            <span class="tag">Distribution</span>
+          </div>
+        </article>
+
+      </div><!-- /plugins grid -->
+
+      <!-- ~~~~~ Embedded & Hardware ~~~~~ -->
+      <h3 class="project-category reveal">Embedded &amp; Hardware</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- USB Audio STM32 -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">USB Audio STM32</h3>
+            <span class="project-status status-completed">Reference Design</span>
+          </div>
+          <p class="project-context">USB Audio Class 2.0 on STM32L476 &middot; C</p>
+          <div class="project-diagram">
+            <img src="diagrams/usb-audio-stm32.png" alt="USB Audio STM32 signal chain" loading="lazy">
+          </div>
+          <p class="project-desc">
+            USB Audio Class 2.0 implementation for STM32L476 using TinyUSB. 48kHz/16-bit stereo
+            streaming in adaptive mode. Ring buffer in dedicated SRAM2 bank, dual PLL clock architecture
+            (PLLSAI1 for ADC, PLLSAI2 for audio I/O), DMA integration for codec/SAI.
+          </p>
+          <div class="project-tags">
+            <span class="tag">C</span>
+            <span class="tag">STM32</span>
+            <span class="tag">TinyUSB</span>
+            <span class="tag">UAC2</span>
+            <span class="tag">DMA</span>
+            <span class="tag">Firmware</span>
+          </div>
+        </article>
+
+        <!-- Guitar Physical Modeling -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Guitar Physical Modeling Pipeline</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Theory to Real-Time Implementation &middot; Python + C++</p>
+          <div class="project-diagram">
+            <img src="diagrams/guitar-physical-model.png" alt="Guitar physical modeling pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            End-to-end physical modelling of guitar acoustics: from theoretical analysis and parameter
+            extraction in Python to real-time JUCE C++ plugin implementation. Covers string vibration
+            modelling, body resonance, and coupling between physical subsystems.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">C++</span>
+            <span class="tag">JUCE</span>
+            <span class="tag">Physical Modeling</span>
+            <span class="tag">DSP</span>
+          </div>
+        </article>
+
+      </div><!-- /embedded grid -->
+
+      <!-- ~~~~~ Research & Academic ~~~~~ -->
+      <h3 class="project-category reveal">Research &amp; Academic</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- Bioacoustics Research -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Bioacoustics Research</h3>
+            <span class="project-status status-research">Academic / Field Research</span>
+          </div>
+          <p class="project-context"><a href="https://ziforge.github.io/gaulosen-study/" target="_blank" rel="noopener">Gaulossen Nature Reserve</a> &middot; BirdNET &middot; Praven Pro</p>
+          <div class="project-diagram">
+            <img src="diagrams/bioacoustics.png" alt="Bioacoustics research pipeline" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Field-based bioacoustic monitoring and analysis. Gaulossen Nature Reserve acoustic monitoring study.
+            BirdNET batch analysis pipeline with YIN F0 estimation and LPC formant analysis.
+            Praven Pro &mdash; a professional bioacoustics workflow combining Python automation with Raven Pro
+            for BirdNET batch processing with F0/formant analysis.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">BirdNET</span>
+            <span class="tag">Raven Pro</span>
+            <span class="tag">Field Recording</span>
+            <span class="tag">F0/Formant</span>
+            <span class="tag">Open Source</span>
+          </div>
+        </article>
+
+        <!-- Acoustics & DSP Research -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Acoustics &amp; DSP Research</h3>
+            <span class="project-status status-research">Academic (AAU / NTNU)</span>
+          </div>
+          <p class="project-context">Signal Processing &middot; Simulation &middot; Psychoacoustics</p>
+          <div class="project-diagram">
+            <img src="diagrams/acoustics-research.png" alt="Acoustics and DSP research areas" loading="lazy">
+          </div>
+          <p class="project-desc">
+            Research and coursework spanning acoustic signal processing, room acoustics,
+            and digital simulation methods. Includes 2D Transmission Line Matrix pipe simulation,
+            1D digital waveguide synthesis of musical instruments, music box DSP analysis
+            (multi-method F0 consensus with SHS, YIN, cepstrum), audio denoising,
+            MFCC extraction, harmonic analysis, and psychoacoustic modelling.
+            Interactive study notebooks with plug-in calculator sections and visual concept maps.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">MATLAB</span>
+            <span class="tag">TLM Simulation</span>
+            <span class="tag">Waveguide</span>
+            <span class="tag">FEM</span>
+            <span class="tag">LaTeX</span>
+          </div>
+        </article>
+
+        <!-- MIR & Audio Education -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">MIR &amp; Audio Education</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Music Information Retrieval Tutorials &middot; Python</p>
+          <p class="project-desc">
+            Music Information Retrieval tutorials with librosa. Google Colab notebooks covering
+            beat tracking, harmonic-percussive source separation, MFCC, chromagram analysis,
+            and time-frequency visualisation for audio signal processing education.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">librosa</span>
+            <span class="tag">MIR</span>
+            <span class="tag">Google Colab</span>
+            <span class="tag">HPSS</span>
+          </div>
+        </article>
+
+      </div><!-- /research grid -->
+
+      <!-- ~~~~~ Other Engineering ~~~~~ -->
+      <h3 class="project-category reveal">Other Engineering</h3>
+      <div class="projects-grid reveal-children">
+
+        <!-- Denoising Film Tool -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Denoising Film Tool</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Professional Video Denoising &middot; Python / Google Colab</p>
+          <p class="project-desc">
+            Professional video denoising tool with an interactive Google Colab interface.
+            Designed for film and media applications where clean footage is critical.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">Video Processing</span>
+            <span class="tag">Google Colab</span>
+            <span class="tag">Denoising</span>
+          </div>
+        </article>
+
+        <!-- Photo Sort -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Photo Sort</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">AI-Powered Photo Organisation &middot; JavaScript</p>
+          <p class="project-desc">
+            Intelligent photo organisation tool that sorts photos by date, categorises content
+            using AI, and manages projects. Available as both desktop app and web app.
+          </p>
+          <div class="project-tags">
+            <span class="tag">JavaScript</span>
+            <span class="tag">AI Classification</span>
+            <span class="tag">Desktop App</span>
+            <span class="tag">Web App</span>
+          </div>
+        </article>
+
+        <!-- Jupyter-Overleaf Workflow -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Jupyter-Overleaf Workflow</h3>
+            <span class="project-status status-completed">Completed</span>
+          </div>
+          <p class="project-context">Academic Publishing Pipeline &middot; Python</p>
+          <p class="project-desc">
+            Tool for converting Jupyter notebooks to academic LaTeX papers with Overleaf and GitHub
+            integration. Streamlines the path from research notebook to publication-ready manuscript.
+          </p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">LaTeX</span>
+            <span class="tag">Jupyter</span>
+            <span class="tag">Overleaf</span>
+            <span class="tag">Academic</span>
+          </div>
+        </article>
+
+        <!-- RF Engineering -->
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">RF Engineering Portfolio</h3>
+            <span class="project-status status-pro">Professional (~5 Years)</span>
+          </div>
+          <p class="project-context">Arqiva</p>
+          <p class="project-desc">
+            Professional RF engineering work covering broadcast transmission infrastructure.
+            RF system design, signal processing, transmission planning, and field engineering.
+            This foundational experience in signal processing and systems engineering directly
+            informs current DSP and FPGA audio work.
+          </p>
+          <div class="project-tags">
+            <span class="tag">RF Design</span>
+            <span class="tag">Signal Processing</span>
+            <span class="tag">Transmission Systems</span>
+            <span class="tag">Test &amp; Measurement</span>
+          </div>
+        </article>
+
+      </div><!-- /other grid -->
+
+    </div>
+  </section>
+
+  <!-- ==================== SKILLS ==================== -->
+  <section id="skills">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 02</p>
+        <h2 class="section-title">Technical Skills</h2>
+        <hr class="section-rule">
+      </div>
+
+      <div class="skills-grid reveal-children">
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">Languages</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">C++</span>
+            <span class="skill-tag">C</span>
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">SystemVerilog</span>
+            <span class="skill-tag">VHDL</span>
+            <span class="skill-tag">Faust</span>
+            <span class="skill-tag">GDScript</span>
+            <span class="skill-tag">C#</span>
+            <span class="skill-tag">JavaScript</span>
+            <span class="skill-tag">MATLAB</span>
+            <span class="skill-tag">Rust (learning)</span>
+            <span class="skill-tag">LaTeX</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">Frameworks &amp; Tools</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">JUCE</span>
+            <span class="skill-tag">PyTorch</span>
+            <span class="skill-tag">ONNX Runtime</span>
+            <span class="skill-tag">RTNeural</span>
+            <span class="skill-tag">OpenCV</span>
+            <span class="skill-tag">NumPy/SciPy</span>
+            <span class="skill-tag">librosa</span>
+            <span class="skill-tag">Unity</span>
+            <span class="skill-tag">Godot</span>
+            <span class="skill-tag">WebAudio/WebMIDI</span>
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">CMake</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">Hardware &amp; Embedded</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">FPGA Development</span>
+            <span class="skill-tag">Analog Circuit Design</span>
+            <span class="skill-tag">PCB Layout</span>
+            <span class="skill-tag">Eurorack</span>
+            <span class="skill-tag">STM32</span>
+            <span class="skill-tag">Bela</span>
+            <span class="skill-tag">Daisy</span>
+            <span class="skill-tag">TinyUSB</span>
+            <span class="skill-tag">SPICE Simulation</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">Audio &amp; DSP</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">Real-time DSP</span>
+            <span class="skill-tag">Physical Modeling</span>
+            <span class="skill-tag">Waveguide Synthesis</span>
+            <span class="skill-tag">Virtual Analog</span>
+            <span class="skill-tag">Spatial Audio / HRTF</span>
+            <span class="skill-tag">Filter Design</span>
+            <span class="skill-tag">FDN Reverb</span>
+            <span class="skill-tag">Metal GPU Compute</span>
+            <span class="skill-tag">Room Acoustics</span>
+            <span class="skill-tag">Bioacoustics</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">ML / AI</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">WaveNet</span>
+            <span class="skill-tag">CNNs</span>
+            <span class="skill-tag">Neural Audio Synthesis</span>
+            <span class="skill-tag">Hybrid VA+Neural</span>
+            <span class="skill-tag">Residual Learning</span>
+            <span class="skill-tag">Computer Vision</span>
+            <span class="skill-tag">ML.NET</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3 class="skill-group-title">Professional</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">RF Engineering</span>
+            <span class="skill-tag">Broadcast Systems</span>
+            <span class="skill-tag">Test &amp; Measurement</span>
+            <span class="skill-tag">MIDI / SysEx / MPE</span>
+            <span class="skill-tag">OSC</span>
+            <span class="skill-tag">Ableton Live API</span>
+          </div>
+        </div>
+
+      </div><!-- /skills-grid -->
+    </div>
+  </section>
+
+  <!-- ==================== EXPERIENCE ==================== -->
+  <section id="experience">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 03</p>
+        <h2 class="section-title">Experience</h2>
+        <hr class="section-rule">
+      </div>
+
+      <div class="timeline reveal">
+
+        <div class="timeline-item">
+          <p class="timeline-period">~5 years</p>
+          <h3 class="timeline-title">RF Engineer</h3>
+          <p class="timeline-subtitle">Arqiva</p>
+          <p class="timeline-desc">
+            Broadcast transmission infrastructure &mdash; RF system design, signal processing,
+            transmission planning, and field engineering. Foundation in signal processing
+            and systems engineering.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">Collaboration</p>
+          <h3 class="timeline-title">Spatial Audio Research</h3>
+          <p class="timeline-subtitle">Harman Corporation</p>
+          <p class="timeline-desc">
+            Research and development of binaural and stereo audio spatialisation
+            for consumer and professional audio applications.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">March 2026</p>
+          <h3 class="timeline-title">Guest Composer</h3>
+          <p class="timeline-subtitle"><a href="https://elektronmusikstudion.se/en/guest-composers/guest-composers-2026/george-redpath/" target="_blank" rel="noopener">Elektronmusikstudion (EMS), Stockholm</a></p>
+          <p class="timeline-desc">
+            Second residency at EMS. Work on neural network emulation of analog synthesizer filters,
+            head-trackable HRTF spatial audio, and physical modelling synthesis using the studio's
+            Buchla, Serge, and EMS Synthi systems.
+          </p>
+          <div class="timeline-embed">
+            <a href="https://elektronmusikstudion.se/en/guest-composers/guest-composers-2026/george-redpath/" target="_blank" rel="noopener" class="ems-card">
+              <span class="ems-card-label">EMS Guest Composer Profile &middot; elektronmusikstudion.se</span>
+              <span class="ems-card-title">George Redpath &mdash; March 10&ndash;22, 2026</span>
+              <span class="ems-card-desc">
+                A multi-disciplinary artist and engineer from Northern Ireland. Currently engaged in
+                research focused on instrument design, interface development, perception, virtual analog
+                synthesis, physical modelling, and neural network methodologies on the FPGA platform.
+                The goal: creating the instrument he has always wanted to play.
+              </span>
+              <span class="ems-card-desc">
+                During this residency at EMS, gathering data and analysis from the unique instruments
+                there for his thesis in Music and Sound Computing at Aalborg University &mdash; and bringing
+                the next generation of modular synthesisers from an extreme music perspective to fruition.
+              </span>
+              <span class="ems-card-desc" style="font-style:italic; color:var(--text-dim); opacity:0.7;">
+                Supported by Aalborg University, Sound &amp; Music Computing.
+              </span>
+              <span class="ems-card-link">View full profile on elektronmusikstudion.se &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">December 2025</p>
+          <h3 class="timeline-title">Guest Composer</h3>
+          <p class="timeline-subtitle"><a href="https://www.instagram.com/elektronmusikstudion_ems/p/DDM5UL9Bdpo/" target="_blank" rel="noopener">Elektronmusikstudion (EMS), Stockholm</a></p>
+          <p class="timeline-desc">
+            First residency at EMS. WaveNet/CNN analog filter emulation research and
+            head-trackable HRTF spatial audio systems.
+          </p>
+          <div class="timeline-embed">
+            <blockquote class="instagram-media" data-instgrm-captioned data-instgrm-permalink="https://www.instagram.com/p/DDM5UL9Bdpo/" data-instgrm-version="14" style="background:#111; border:1px solid rgba(255,255,255,0.1); border-radius:8px; max-width:540px; min-width:280px; padding:0; width:100%;"></blockquote>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">Founder</p>
+          <h3 class="timeline-title">Ziforge</h3>
+          <p class="timeline-desc">
+            Audio plugin company based in the EU. Creates tools that bridge the gap between
+            hardware synthesizers and modern DAW workflows. Products include Plinky Interface,
+            OTO Interface, and other commercial audio plugins with licensing infrastructure.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">Demos</p>
+          <h3 class="timeline-title">Superbooth &amp; Dutch Modular Fest</h3>
+          <p class="timeline-desc">
+            Demonstrated work at Superbooth (Berlin) on two occasions and at Dutch Modular Fest.
+            Presenting synthesizer designs and audio technology to the international modular synthesis community.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">Prior career</p>
+          <h3 class="timeline-title">Touring Musician</h3>
+          <p class="timeline-desc">
+            Performance background informing instrument design philosophy and deep understanding
+            of musical workflow and expressivity. Original founding member of Unyielding Love
+            (Belfast, 2014) &mdash; grind/noisecore/extreme metal.
+          </p>
+        </div>
+
+      </div><!-- /timeline -->
+    </div>
+  </section>
+
+  <!-- ==================== EDUCATION ==================== -->
+  <section id="education">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 04</p>
+        <h2 class="section-title">Education</h2>
+        <hr class="section-rule">
+      </div>
+
+      <div class="timeline reveal">
+
+        <div class="timeline-item">
+          <p class="timeline-period">In progress</p>
+          <h3 class="timeline-title">MSc Sound &amp; Music Computing</h3>
+          <p class="timeline-subtitle">Aalborg University Copenhagen</p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">6 months &middot; Erasmus Exchange</p>
+          <h3 class="timeline-title">Acoustics</h3>
+          <p class="timeline-subtitle">NTNU &mdash; Norwegian University of Science and Technology, Trondheim</p>
+          <p class="timeline-desc">
+            Erasmus semester at NTNU studying acoustics. Courses: Music and Room Acoustics,
+            Introduction to Acoustics, DSP for Acoustics, and Bioacoustics.
+            Field work at Gaulossen Nature Reserve for bioacoustic monitoring research.
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <p class="timeline-period">Completed</p>
+          <h3 class="timeline-title">BEng Electronic Engineering with RF</h3>
+          <p class="timeline-subtitle">First Class Honours &middot; University of Huddersfield / Birmingham City University</p>
+        </div>
+
+      </div><!-- /timeline -->
+    </div>
+  </section>
+
+  <!-- ==================== PUBLICATIONS ==================== -->
+  <section id="publications">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 05</p>
+        <h2 class="section-title">Publications &amp; Talks</h2>
+        <hr class="section-rule">
+      </div>
+
+      <div class="projects-grid reveal-children">
+
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">Fan: Neural Synthesis for Historic Preservation &amp; Accessibility</h3>
+            <span class="project-status status-active">EMS Proposal &middot; 2026</span>
+          </div>
+          <p class="project-context">Elektronmusikstudion (EMS) Stockholm &middot; LaTeX</p>
+          <p class="project-desc">
+            Proposal for artist residency at EMS Stockholm using machine learning for the historic
+            preservation of rare analog synthesizers &mdash; specifically the EMS VCS3, Synthi A,
+            Synthi AKS, and Synthi 100. Only ~900 VCS3 units were ever manufactured; these instruments
+            are rare, fragile, and geographically limited. Traditional software emulations fall short.
+          </p>
+          <p class="project-desc">
+            The proposed solution is a Neural Virtual Analog Hybrid Filter &mdash; a parallel architecture
+            combining traditional VA DSP with a lightweight neural network (~50KB) trained on real
+            analog hardware input/output pairs, running sample-by-sample in real time. A bespoke
+            capture system enables one neural model per instrument component per day. The existing
+            Fan synthesizer was built from just 3 days of previous access to EMS Stockholm.
+          </p>
+          <div class="project-tags">
+            <span class="tag">LaTeX</span>
+            <span class="tag">Neural Audio</span>
+            <span class="tag">Historic Preservation</span>
+            <span class="tag">EMS Stockholm</span>
+            <span class="tag">Hybrid VA+Neural</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-header">
+            <h3 class="project-title">NIME 2026</h3>
+            <span class="project-status status-dev">In Preparation</span>
+          </div>
+          <p class="project-desc">
+            Paper submission in preparation for the International Conference on New Interfaces
+            for Musical Expression (NIME) 2026.
+          </p>
+          <div class="project-tags">
+            <span class="tag">NIME</span>
+            <span class="tag">Academic Paper</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTACT ==================== -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">// 06</p>
+        <h2 class="section-title">Contact</h2>
+        <hr class="section-rule">
+      </div>
+
+      <div class="contact-content reveal">
+        <div class="contact-text">
+          <p>
+            Interested in FPGA audio, DSP research, or instrument design?
+            I'm always open to conversations about synthesis, signal processing, and creative technology.
+          </p>
+
+          <div class="contact-links">
+
+            <a href="mailto:ghredpath@hotmail.com" class="contact-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+              ghredpath@hotmail.com
+            </a>
+
+            <a href="https://www.linkedin.com/in/george-redpath-39b94319a" target="_blank" rel="noopener" class="contact-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                <rect x="2" y="9" width="4" height="12"></rect>
+                <circle cx="4" cy="4" r="2"></circle>
+              </svg>
+              LinkedIn
+            </a>
+
+            <!-- GitHub -->
+            <a href="https://github.com/ziforge" target="_blank" rel="noopener" class="contact-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+                <path d="M9 18c-4.51 2-5-2-7-2"></path>
+              </svg>
+              GitHub
+            </a>
+
+            <!-- Add more contact links here -->
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Ziforge. Built with care.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="main.js?v=20"></script>
+  <script async src="//www.instagram.com/embed.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- DAW -->
+  <rect x="15" y="35" width="100" height="75" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="65" y="57" text-anchor="middle" fill="#5bc0be" class="subtitle">DAW</text>
+  <line x1="27" y1="64" x2="103" y2="64" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="65" y="80" text-anchor="middle" fill="#999" class="tiny">VST3 / AU / AAX</text>
+  <text x="65" y="92" text-anchor="middle" fill="#999" class="tiny">Host Integration</text>
+
+  <line x1="115" y1="72" x2="150" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="147,68 155,72 147,76" fill="#555"/>
+
+  <!-- JUCE Plugin -->
+  <rect x="155" y="20" width="200" height="105" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="255" y="42" text-anchor="middle" fill="#e8a835" class="subtitle">JUCE PLUGIN SUITE</text>
+  <line x1="168" y1="49" x2="342" y2="49" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <rect x="170" y="57" width="75" height="24" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="207" y="73" text-anchor="middle" fill="#ccc" class="tiny">OTOInterface</text>
+
+  <rect x="253" y="57" width="85" height="24" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="295" y="73" text-anchor="middle" fill="#ccc" class="tiny">PlinkyInterface</text>
+
+  <rect x="170" y="88" width="75" height="24" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="207" y="104" text-anchor="middle" fill="#ccc" class="tiny">PlinkyBridge</text>
+
+  <rect x="253" y="88" width="85" height="24" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="295" y="104" text-anchor="middle" fill="#ccc" class="tiny">Plinky-VST</text>
+
+  <!-- SysEx Protocol -->
+  <line x1="355" y1="72" x2="400" y2="72" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="397,68 405,72 397,76" fill="#e8a835"/>
+  <polygon points="358,68 350,72 358,76" fill="#e8a835"/>
+
+  <rect x="405" y="30" width="130" height="85" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="470" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">MIDI SYSEX</text>
+  <line x1="417" y1="59" x2="523" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="470" y="74" text-anchor="middle" fill="#ccc" class="detail">Preset Transfer</text>
+  <text x="470" y="88" text-anchor="middle" fill="#999" class="tiny">Bank Management</text>
+  <text x="470" y="100" text-anchor="middle" fill="#999" class="tiny">Parameter Sync</text>
+
+  <!-- Hardware -->
+  <line x1="535" y1="72" x2="575" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="572,68 580,72 572,76" fill="#555"/>
+
+  <rect x="580" y="30" width="120" height="85" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="640" y="52" text-anchor="middle" fill="#5bc0be" class="subtitle">HARDWARE</text>
+  <line x1="592" y1="59" x2="688" y2="59" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="640" y="74" text-anchor="middle" fill="#999" class="tiny">OTO Biscuit</text>
+  <text x="640" y="86" text-anchor="middle" fill="#999" class="tiny">OTO BIM/BAM/Boum</text>
+  <text x="640" y="98" text-anchor="middle" fill="#999" class="tiny">Plinky Synth</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">HARDWARE PRESET MANAGERS &middot; MIDI SYSEX &middot; JUCE &middot; VST3/AU/AAX &middot; CROSS-PLATFORM</text>
+</svg>

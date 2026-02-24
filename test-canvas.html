@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Canvas Test</title></head>
+<body style="background:#0a0a0a; margin:0;">
+<canvas id="test" style="position:fixed;top:0;left:0;width:100vw;height:100vh;"></canvas>
+<script>
+const c = document.getElementById('test');
+c.width = window.innerWidth;
+c.height = window.innerHeight;
+const ctx = c.getContext('2d');
+ctx.fillStyle = '#e8a835';
+ctx.fillRect(100, 100, 200, 200);
+ctx.font = '30px monospace';
+ctx.fillText('CANVAS WORKS', 120, 220);
+document.title = 'Canvas: ' + c.width + 'x' + c.height;
+</script>
+</body>
+</html>

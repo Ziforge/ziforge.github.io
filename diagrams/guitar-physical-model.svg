@@ -1,0 +1,66 @@
+<svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="180" rx="8" fill="#111"/>
+
+  <!-- Excitation -->
+  <rect x="15" y="35" width="90" height="80" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="60" y="57" text-anchor="middle" fill="#e8a835" class="subtitle">EXCITATION</text>
+  <line x1="27" y1="64" x2="93" y2="64" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="60" y="80" text-anchor="middle" fill="#999" class="tiny">Pluck Model</text>
+  <text x="60" y="92" text-anchor="middle" fill="#999" class="tiny">Pick Position</text>
+  <text x="60" y="104" text-anchor="middle" fill="#999" class="tiny">Velocity Map</text>
+
+  <line x1="105" y1="75" x2="140" y2="75" stroke="#555" stroke-width="1.5"/>
+  <polygon points="137,71 145,75 137,79" fill="#555"/>
+
+  <!-- String Model -->
+  <rect x="145" y="25" width="150" height="100" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="220" y="48" text-anchor="middle" fill="#e8a835" class="subtitle">STRING MODEL</text>
+  <line x1="158" y1="55" x2="282" y2="55" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="220" y="72" text-anchor="middle" fill="#ccc" class="detail">Waveguide Pair</text>
+  <text x="220" y="86" text-anchor="middle" fill="#999" class="tiny">Stiffness Allpass</text>
+  <text x="220" y="98" text-anchor="middle" fill="#999" class="tiny">Freq-Dep Damping</text>
+  <text x="220" y="110" text-anchor="middle" fill="#999" class="tiny">Nonlinear Tension</text>
+
+  <line x1="295" y1="75" x2="330" y2="75" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="327,71 335,75 327,79" fill="#e8a835"/>
+
+  <!-- Body Resonance -->
+  <rect x="335" y="25" width="140" height="100" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="405" y="48" text-anchor="middle" fill="#e8a835" class="subtitle">BODY RESONANCE</text>
+  <line x1="348" y1="55" x2="462" y2="55" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="405" y="72" text-anchor="middle" fill="#ccc" class="detail">Modal Coupling</text>
+  <text x="405" y="86" text-anchor="middle" fill="#999" class="tiny">Top Plate Modes</text>
+  <text x="405" y="98" text-anchor="middle" fill="#999" class="tiny">Back Plate</text>
+  <text x="405" y="110" text-anchor="middle" fill="#999" class="tiny">Air Cavity</text>
+
+  <line x1="475" y1="75" x2="510" y2="75" stroke="#555" stroke-width="1.5"/>
+  <polygon points="507,71 515,75 507,79" fill="#555"/>
+
+  <!-- JUCE Plugin -->
+  <rect x="515" y="35" width="90" height="80" rx="6" fill="rgba(91,192,190,0.05)" stroke="rgba(91,192,190,0.5)" stroke-width="1"/>
+  <text x="560" y="57" text-anchor="middle" fill="#5bc0be" class="subtitle">JUCE</text>
+  <line x1="527" y1="64" x2="593" y2="64" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="560" y="80" text-anchor="middle" fill="#999" class="tiny">Real-time C++</text>
+  <text x="560" y="92" text-anchor="middle" fill="#999" class="tiny">Plugin Format</text>
+  <text x="560" y="104" text-anchor="middle" fill="#999" class="tiny">VST3 / AU</text>
+
+  <!-- Output -->
+  <line x1="605" y1="75" x2="640" y2="75" stroke="#555" stroke-width="1.5"/>
+  <polygon points="637,71 645,75 637,79" fill="#555"/>
+  <rect x="645" y="53" width="55" height="44" rx="4" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="672" y="79" text-anchor="middle" fill="#5bc0be" class="tiny">OUT</text>
+
+  <!-- Python research arrow -->
+  <rect x="145" y="140" width="330" height="24" rx="4" fill="rgba(91,192,190,0.03)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="310" y="155" text-anchor="middle" fill="rgba(91,192,190,0.5)" class="tiny">Python Research &middot; Parameter Extraction &middot; Prototyping &rarr; C++ Implementation</text>
+
+  <text x="360" y="176" text-anchor="middle" fill="#444" class="label">GUITAR PHYSICAL MODEL &middot; WAVEGUIDE STRING &middot; MODAL BODY &middot; PYTHON + C++ / JUCE</text>
+</svg>

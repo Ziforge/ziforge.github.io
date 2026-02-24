@@ -1,0 +1,60 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- Particle System -->
+  <rect x="15" y="30" width="120" height="85" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="75" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">PARTICLE SYS</text>
+  <line x1="27" y1="59" x2="123" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="75" y="74" text-anchor="middle" fill="#ccc" class="detail">N Grains</text>
+  <text x="75" y="88" text-anchor="middle" fill="#999" class="tiny">Position (x,y,z)</text>
+  <text x="75" y="100" text-anchor="middle" fill="#999" class="tiny">Velocity Vectors</text>
+
+  <line x1="135" y1="72" x2="170" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="167,68 175,72 167,76" fill="#555"/>
+
+  <!-- Collision Detection -->
+  <rect x="175" y="30" width="130" height="85" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="2"/>
+  <text x="240" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">COLLISION</text>
+  <line x1="187" y1="59" x2="293" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="240" y="74" text-anchor="middle" fill="#ccc" class="detail">Hertzian Contact</text>
+  <text x="240" y="88" text-anchor="middle" fill="#999" class="tiny">Impact Force</text>
+  <text x="240" y="100" text-anchor="middle" fill="#999" class="tiny">Restitution Coeff</text>
+
+  <line x1="305" y1="72" x2="340" y2="72" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="337,68 345,72 337,76" fill="#e8a835"/>
+
+  <!-- Modal Resonance -->
+  <rect x="345" y="30" width="130" height="85" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="410" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">MODAL SYNTH</text>
+  <line x1="357" y1="59" x2="463" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="410" y="74" text-anchor="middle" fill="#ccc" class="detail">Resonant Modes</text>
+  <text x="410" y="88" text-anchor="middle" fill="#999" class="tiny">Grain Material</text>
+  <text x="410" y="100" text-anchor="middle" fill="#999" class="tiny">Size-Dependent F0</text>
+
+  <line x1="475" y1="72" x2="510" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="507,68 515,72 507,76" fill="#555"/>
+
+  <!-- Spatial Mix -->
+  <rect x="515" y="35" width="90" height="75" rx="5" fill="rgba(91,192,190,0.05)" stroke="rgba(91,192,190,0.5)" stroke-width="1"/>
+  <text x="560" y="57" text-anchor="middle" fill="#5bc0be" class="detail">SPATIAL</text>
+  <text x="560" y="70" text-anchor="middle" fill="#5bc0be" class="detail">MIX</text>
+  <text x="560" y="88" text-anchor="middle" fill="#999" class="tiny">3D Position</text>
+  <text x="560" y="100" text-anchor="middle" fill="#999" class="tiny">Attenuation</text>
+
+  <line x1="605" y1="72" x2="635" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="632,68 640,72 632,76" fill="#555"/>
+
+  <!-- Output -->
+  <rect x="640" y="50" width="60" height="44" rx="4" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="670" y="76" text-anchor="middle" fill="#5bc0be" class="tiny">OUT</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">GRANULAR COLLISION PHYSICS &middot; HERTZIAN CONTACT &middot; MODAL SYNTHESIS &middot; MATLAB</text>
+</svg>

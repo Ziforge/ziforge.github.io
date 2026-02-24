@@ -1,0 +1,71 @@
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="200" rx="8" fill="#111"/>
+
+  <!-- Central hub -->
+  <rect x="255" y="30" width="210" height="80" rx="8" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="2"/>
+  <text x="360" y="55" text-anchor="middle" fill="#e8a835" class="title">NEUROVERSE CORE</text>
+  <text x="360" y="72" text-anchor="middle" fill="#999" class="detail">Sensory Phenotype Adaptation</text>
+  <text x="360" y="86" text-anchor="middle" fill="#999" class="tiny">Dunn's Framework &middot; Generative Music &middot; Markov + Coprime Loops</text>
+  <text x="360" y="100" text-anchor="middle" fill="#666" class="tiny">Unity VR (Quest 3) &middot; Godot Mobile (GDExtension)</text>
+
+  <!-- DSP Modules — arranged below -->
+  <rect x="15" y="130" width="690" height="48" rx="6" fill="rgba(91,192,190,0.03)" stroke="rgba(91,192,190,0.15)" stroke-width="1"/>
+  <text x="360" y="148" text-anchor="middle" fill="#5bc0be" class="detail">INTEGRATED DSP MODULES (C++ Audio Engine)</text>
+
+  <rect x="25" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="70" y="167" text-anchor="middle" fill="#ccc" class="tiny">Bioacoustic</text>
+
+  <rect x="125" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="170" y="167" text-anchor="middle" fill="#ccc" class="tiny">Guitar KS</text>
+
+  <rect x="225" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="270" y="167" text-anchor="middle" fill="#ccc" class="tiny">teorainn Rev</text>
+
+  <rect x="325" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="370" y="167" text-anchor="middle" fill="#ccc" class="tiny">Phys. Tape</text>
+
+  <rect x="425" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="470" y="167" text-anchor="middle" fill="#ccc" class="tiny">Neural Filter</text>
+
+  <rect x="525" y="155" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="570" y="167" text-anchor="middle" fill="#ccc" class="tiny">Binaural</text>
+
+  <rect x="625" y="155" width="70" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="660" y="167" text-anchor="middle" fill="#ccc" class="tiny">Mixer</text>
+
+  <!-- Connection lines from hub to modules -->
+  <line x1="360" y1="110" x2="360" y2="130" stroke="rgba(232,168,53,0.3)" stroke-width="1.5"/>
+
+  <!-- Phenotype boxes on left and right -->
+  <rect x="15" y="35" width="120" height="68" rx="5" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.4)" stroke-width="1"/>
+  <text x="75" y="53" text-anchor="middle" fill="#5bc0be" class="detail">PHENOTYPES</text>
+  <line x1="25" y1="59" x2="125" y2="59" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="75" y="72" text-anchor="middle" fill="#999" class="tiny">Avoider</text>
+  <text x="75" y="83" text-anchor="middle" fill="#999" class="tiny">Low Reg</text>
+  <text x="75" y="94" text-anchor="middle" fill="#999" class="tiny">Seeker / Max</text>
+
+  <line x1="135" y1="69" x2="255" y2="69" stroke="rgba(91,192,190,0.3)" stroke-width="1"/>
+  <polygon points="252,65 260,69 252,73" fill="rgba(91,192,190,0.3)"/>
+
+  <!-- Modes on right -->
+  <rect x="585" y="35" width="120" height="68" rx="5" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.4)" stroke-width="1"/>
+  <text x="645" y="53" text-anchor="middle" fill="#5bc0be" class="detail">MODES</text>
+  <line x1="595" y1="59" x2="695" y2="59" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="645" y="72" text-anchor="middle" fill="#999" class="tiny">Sanctuary</text>
+  <text x="645" y="83" text-anchor="middle" fill="#999" class="tiny">Explorer</text>
+  <text x="645" y="94" text-anchor="middle" fill="#999" class="tiny">Assessment</text>
+
+  <line x1="465" y1="69" x2="585" y2="69" stroke="rgba(91,192,190,0.3)" stroke-width="1"/>
+  <polygon points="582,65 590,69 582,73" fill="rgba(91,192,190,0.3)"/>
+
+  <text x="360" y="195" text-anchor="middle" fill="#444" class="label">ADAPTIVE SENSORY PLATFORM &middot; UNITY / GODOT &middot; C++ GDEXTENSION &middot; RTNEURAL &middot; META QUEST 3</text>
+</svg>

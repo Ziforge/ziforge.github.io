@@ -1,0 +1,72 @@
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="200" rx="8" fill="#111"/>
+
+  <!-- Input -->
+  <rect x="20" y="60" width="70" height="60" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="55" y="85" text-anchor="middle" fill="#5bc0be" class="subtitle">INPUT</text>
+  <text x="55" y="110" text-anchor="middle" fill="#666" class="tiny">Audio</text>
+
+  <!-- Arrow to VA -->
+  <line x1="90" y1="90" x2="125" y2="90" stroke="#555" stroke-width="1.5"/>
+  <polygon points="122,86 130,90 122,94" fill="#555"/>
+
+  <!-- VA Filter Model -->
+  <rect x="130" y="30" width="160" height="120" rx="6" fill="rgba(91,192,190,0.05)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="210" y="53" text-anchor="middle" fill="#5bc0be" class="subtitle">VA FILTER MODEL</text>
+  <line x1="142" y1="60" x2="278" y2="60" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="210" y="77" text-anchor="middle" fill="#ccc" class="detail">4-Pole Diode Ladder</text>
+  <text x="210" y="93" text-anchor="middle" fill="#999" class="tiny">Bilinear Transform</text>
+  <text x="210" y="106" text-anchor="middle" fill="#999" class="tiny">Tanh Saturation</text>
+  <text x="210" y="119" text-anchor="middle" fill="#999" class="tiny">LP / HP / BP</text>
+  <text x="210" y="132" text-anchor="middle" fill="#999" class="tiny">18 / 24 / 48 dB/oct</text>
+
+  <!-- Arrow: VA output splits -->
+  <line x1="290" y1="90" x2="340" y2="90" stroke="#555" stroke-width="1.5"/>
+  <!-- Split point -->
+  <circle cx="340" cy="90" r="3" fill="#555"/>
+  <!-- Down to neural -->
+  <line x1="340" y1="93" x2="340" y2="130" stroke="#555" stroke-width="1"/>
+  <line x1="340" y1="130" x2="370" y2="130" stroke="#555" stroke-width="1"/>
+  <polygon points="367,126 375,130 367,134" fill="#555"/>
+  <!-- Across to sum -->
+  <line x1="343" y1="90" x2="555" y2="90" stroke="#555" stroke-width="1.5"/>
+
+  <!-- Neural Residual -->
+  <rect x="375" y="105" width="150" height="70" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="450" y="125" text-anchor="middle" fill="#e8a835" class="subtitle">WAVENET RESIDUAL</text>
+  <line x1="387" y1="132" x2="513" y2="132" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="450" y="148" text-anchor="middle" fill="#ccc" class="detail">ONNX Runtime ~700KB</text>
+  <text x="450" y="162" text-anchor="middle" fill="#999" class="tiny">Learns delta only</text>
+
+  <!-- Arrow: Neural → Sum -->
+  <line x1="525" y1="140" x2="555" y2="140" stroke="#e8a835" stroke-width="1.5"/>
+  <line x1="555" y1="140" x2="555" y2="97" stroke="#e8a835" stroke-width="1.5"/>
+
+  <!-- Sum node -->
+  <circle cx="570" cy="90" r="15" fill="rgba(232,168,53,0.1)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="570" y="94" text-anchor="middle" fill="#e8a835" class="title">+</text>
+
+  <!-- Arrow to output -->
+  <line x1="585" y1="90" x2="630" y2="90" stroke="#555" stroke-width="1.5"/>
+  <polygon points="627,86 635,90 627,94" fill="#555"/>
+
+  <!-- Output -->
+  <rect x="635" y="60" width="65" height="60" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="667" y="85" text-anchor="middle" fill="#5bc0be" class="subtitle">OUT</text>
+  <text x="667" y="110" text-anchor="middle" fill="#666" class="tiny">VST3/AU</text>
+
+  <!-- Labels -->
+  <text x="210" y="172" text-anchor="middle" fill="#5bc0be" class="tiny">Physics-based</text>
+  <text x="450" y="188" text-anchor="middle" fill="#e8a835" class="tiny">Neural correction</text>
+
+  <text x="360" y="198" text-anchor="middle" fill="#444" class="label">HYBRID VA + NEURAL ARCHITECTURE &middot; C++17 &middot; ONNX RUNTIME &middot; JUCE</text>
+</svg>

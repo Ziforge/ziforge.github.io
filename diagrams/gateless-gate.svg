@@ -1,0 +1,70 @@
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <!-- Background regions -->
+  <rect x="0" y="0" width="720" height="220" rx="8" fill="#111"/>
+
+  <!-- Analog Front End -->
+  <rect x="20" y="25" width="140" height="170" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="90" y="48" text-anchor="middle" fill="#5bc0be" class="subtitle">ANALOG FRONT END</text>
+  <rect x="35" y="60" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="90" y="79" text-anchor="middle" fill="#999" class="detail">VCA / VCF</text>
+  <rect x="35" y="100" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="90" y="119" text-anchor="middle" fill="#999" class="detail">ADC / DAC</text>
+  <rect x="35" y="140" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="90" y="159" text-anchor="middle" fill="#999" class="detail">Eurorack I/O</text>
+
+  <!-- Arrows: Analog → FPGA -->
+  <line x1="160" y1="110" x2="210" y2="110" stroke="#555" stroke-width="1.5"/>
+  <polygon points="207,106 215,110 207,114" fill="#555"/>
+
+  <!-- FPGA Core -->
+  <rect x="215" y="15" width="290" height="190" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="360" y="42" text-anchor="middle" fill="#e8a835" class="title">FPGA CORE</text>
+  <line x1="235" y1="52" x2="485" y2="52" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <!-- FPGA internal blocks -->
+  <rect x="235" y="62" width="120" height="38" rx="4" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="295" y="78" text-anchor="middle" fill="#ccc" class="detail">DSP Engine</text>
+  <text x="295" y="92" text-anchor="middle" fill="#666" class="tiny">Synthesis / FX</text>
+
+  <rect x="365" y="62" width="120" height="38" rx="4" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="425" y="78" text-anchor="middle" fill="#ccc" class="detail">Routing Matrix</text>
+  <text x="425" y="92" text-anchor="middle" fill="#666" class="tiny">Signal Path</text>
+
+  <rect x="235" y="110" width="120" height="38" rx="4" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="295" y="126" text-anchor="middle" fill="#ccc" class="detail">Modulation</text>
+  <text x="295" y="140" text-anchor="middle" fill="#666" class="tiny">LFO / Env / Seq</text>
+
+  <rect x="365" y="110" width="120" height="38" rx="4" fill="rgba(232,168,53,0.12)" stroke="#e8a835" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="425" y="126" text-anchor="middle" fill="#e8a835" class="detail">Novel Architecture</text>
+  <text x="425" y="140" text-anchor="middle" fill="rgba(232,168,53,0.6)" class="tiny">Patent Pending</text>
+
+  <!-- FPGA bottom: Total Recall -->
+  <rect x="280" y="158" width="160" height="32" rx="4" fill="rgba(232,168,53,0.1)" stroke="#e8a835" stroke-width="1"/>
+  <text x="360" y="179" text-anchor="middle" fill="#e8a835" class="subtitle">TOTAL RECALL</text>
+
+  <!-- Arrows: FPGA → Output -->
+  <line x1="505" y1="110" x2="555" y2="110" stroke="#555" stroke-width="1.5"/>
+  <polygon points="552,106 560,110 552,114" fill="#555"/>
+
+  <!-- Output Stage -->
+  <rect x="560" y="25" width="140" height="170" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="630" y="48" text-anchor="middle" fill="#5bc0be" class="subtitle">OUTPUT</text>
+  <rect x="575" y="62" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="630" y="81" text-anchor="middle" fill="#999" class="detail">24-bit DAC</text>
+  <rect x="575" y="102" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="630" y="121" text-anchor="middle" fill="#999" class="detail">Analog Output</text>
+  <rect x="575" y="142" width="110" height="30" rx="4" fill="rgba(91,192,190,0.08)" stroke="#5bc0be" stroke-width="0.5"/>
+  <text x="630" y="161" text-anchor="middle" fill="#999" class="detail">CV / Gate</text>
+
+  <!-- Bottom label -->
+  <text x="360" y="212" text-anchor="middle" fill="#444" class="label">3U 104HP EURORACK &middot; SYSTEMVERILOG &middot; CUSTOM PCB</text>
+</svg>

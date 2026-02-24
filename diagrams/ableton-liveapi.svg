@@ -1,0 +1,61 @@
+<svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="150" rx="8" fill="#111"/>
+
+  <!-- External Control -->
+  <rect x="15" y="30" width="110" height="75" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="70" y="52" text-anchor="middle" fill="#5bc0be" class="subtitle">EXTERNAL</text>
+  <line x1="27" y1="59" x2="113" y2="59" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="70" y="74" text-anchor="middle" fill="#999" class="tiny">Control Surfaces</text>
+  <text x="70" y="86" text-anchor="middle" fill="#999" class="tiny">Automation</text>
+  <text x="70" y="98" text-anchor="middle" fill="#999" class="tiny">Scripts</text>
+
+  <line x1="125" y1="67" x2="165" y2="67" stroke="#555" stroke-width="1.5"/>
+  <polygon points="162,63 170,67 162,71" fill="#555"/>
+
+  <!-- Remote Script -->
+  <rect x="170" y="20" width="210" height="95" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="275" y="42" text-anchor="middle" fill="#e8a835" class="subtitle">THREAD-SAFE REMOTE SCRIPT</text>
+  <line x1="183" y1="49" x2="367" y2="49" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="275" y="66" text-anchor="middle" fill="#ccc" class="detail">220+ LiveAPI Tools</text>
+  <text x="275" y="80" text-anchor="middle" fill="#999" class="tiny">Thread Safety Locks</text>
+  <text x="275" y="92" text-anchor="middle" fill="#999" class="tiny">Event Callbacks</text>
+  <text x="275" y="104" text-anchor="middle" fill="#999" class="tiny">State Synchronisation</text>
+
+  <!-- Bidirectional arrow -->
+  <line x1="380" y1="67" x2="425" y2="67" stroke="#e8a835" stroke-width="1.5"/>
+  <polygon points="422,63 430,67 422,71" fill="#e8a835"/>
+  <polygon points="383,63 375,67 383,71" fill="#e8a835"/>
+
+  <!-- Ableton Live -->
+  <rect x="430" y="20" width="270" height="95" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="565" y="42" text-anchor="middle" fill="#5bc0be" class="subtitle">ABLETON LIVE</text>
+  <line x1="442" y1="49" x2="688" y2="49" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+
+  <rect x="445" y="57" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="482" y="72" text-anchor="middle" fill="#ccc" class="tiny">Tracks</text>
+
+  <rect x="527" y="57" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="564" y="72" text-anchor="middle" fill="#ccc" class="tiny">Clips</text>
+
+  <rect x="609" y="57" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="646" y="72" text-anchor="middle" fill="#ccc" class="tiny">Devices</text>
+
+  <rect x="445" y="85" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="482" y="100" text-anchor="middle" fill="#ccc" class="tiny">Mixer</text>
+
+  <rect x="527" y="85" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="564" y="100" text-anchor="middle" fill="#ccc" class="tiny">Transport</text>
+
+  <rect x="609" y="85" width="75" height="22" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="646" y="100" text-anchor="middle" fill="#ccc" class="tiny">Scenes</text>
+
+  <text x="360" y="140" text-anchor="middle" fill="#444" class="label">ABLETON LIVEAPI &middot; 220+ TOOLS &middot; THREAD-SAFE &middot; REMOTE SCRIPT &middot; PYTHON &middot; OPEN SOURCE</text>
+</svg>

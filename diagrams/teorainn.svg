@@ -1,0 +1,83 @@
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="200" rx="8" fill="#111"/>
+
+  <!-- Input -->
+  <rect x="15" y="70" width="60" height="50" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="45" y="100" text-anchor="middle" fill="#5bc0be" class="detail">INPUT</text>
+
+  <!-- Arrow -->
+  <line x1="75" y1="95" x2="100" y2="95" stroke="#555" stroke-width="1.5"/>
+  <polygon points="97,91 105,95 97,99" fill="#555"/>
+
+  <!-- Prediffusion -->
+  <rect x="105" y="55" width="90" height="80" rx="5" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.4)" stroke-width="1"/>
+  <text x="150" y="75" text-anchor="middle" fill="#5bc0be" class="detail">PREDIFFUSE</text>
+  <line x1="115" y1="82" x2="185" y2="82" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="150" y="97" text-anchor="middle" fill="#999" class="tiny">4x Allpass</text>
+  <text x="150" y="109" text-anchor="middle" fill="#999" class="tiny">LFO Mod</text>
+  <text x="150" y="121" text-anchor="middle" fill="#999" class="tiny">Early Ref 7-tap</text>
+
+  <!-- Arrow -->
+  <line x1="195" y1="95" x2="220" y2="95" stroke="#555" stroke-width="1.5"/>
+  <!-- Split -->
+  <circle cx="220" cy="95" r="3" fill="#555"/>
+  <line x1="220" y1="95" x2="220" y2="55" stroke="#555" stroke-width="1"/>
+  <line x1="220" y1="55" x2="240" y2="55" stroke="#555" stroke-width="1"/>
+  <polygon points="237,51 245,55 237,59" fill="#555"/>
+  <line x1="220" y1="95" x2="220" y2="135" stroke="#555" stroke-width="1"/>
+  <line x1="220" y1="135" x2="240" y2="135" stroke="#555" stroke-width="1"/>
+  <polygon points="237,131 245,135 237,139" fill="#555"/>
+
+  <!-- Tank A -->
+  <rect x="245" y="20" width="200" height="70" rx="6" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="345" y="42" text-anchor="middle" fill="#e8a835" class="subtitle">FDN TANK A</text>
+  <line x1="257" y1="49" x2="433" y2="49" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="345" y="65" text-anchor="middle" fill="#ccc" class="detail">8 Delay Lines + Hadamard Mix</text>
+  <text x="345" y="79" text-anchor="middle" fill="#999" class="tiny">RT60 Decay &middot; HF Damping &middot; Feedback Loop</text>
+
+  <!-- Tank B -->
+  <rect x="245" y="100" width="200" height="70" rx="6" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="345" y="122" text-anchor="middle" fill="#e8a835" class="subtitle">FDN TANK B</text>
+  <line x1="257" y1="129" x2="433" y2="129" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="345" y="145" text-anchor="middle" fill="#ccc" class="detail">8 Delay Lines + Hadamard Mix</text>
+  <text x="345" y="159" text-anchor="middle" fill="#999" class="tiny">RT60 Decay &middot; HF Damping &middot; Feedback Loop</text>
+
+  <!-- Feedback arrows (curved back) -->
+  <path d="M 445 55 Q 460 55 460 40 Q 460 25 440 25 L 260 25 Q 248 25 248 35" fill="none" stroke="rgba(232,168,53,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+  <path d="M 445 135 Q 460 135 460 150 Q 460 165 440 165 L 260 165 Q 248 165 248 155" fill="none" stroke="rgba(232,168,53,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Merge arrows from tanks -->
+  <line x1="445" y1="55" x2="480" y2="55" stroke="#555" stroke-width="1"/>
+  <line x1="445" y1="135" x2="480" y2="135" stroke="#555" stroke-width="1"/>
+  <line x1="480" y1="55" x2="480" y2="135" stroke="#555" stroke-width="1"/>
+  <line x1="480" y1="95" x2="500" y2="95" stroke="#555" stroke-width="1.5"/>
+  <polygon points="497,91 505,95 497,99" fill="#555"/>
+
+  <!-- Time FX -->
+  <rect x="505" y="55" width="100" height="80" rx="5" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.4)" stroke-width="1"/>
+  <text x="555" y="75" text-anchor="middle" fill="#5bc0be" class="detail">TIME FX</text>
+  <line x1="515" y1="82" x2="595" y2="82" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="555" y="97" text-anchor="middle" fill="#999" class="tiny">Delay</text>
+  <text x="555" y="109" text-anchor="middle" fill="#999" class="tiny">Shimmer</text>
+  <text x="555" y="121" text-anchor="middle" fill="#999" class="tiny">Chorus</text>
+
+  <!-- Arrow -->
+  <line x1="605" y1="95" x2="635" y2="95" stroke="#555" stroke-width="1.5"/>
+  <polygon points="632,91 640,95 632,99" fill="#555"/>
+
+  <!-- Output -->
+  <rect x="640" y="70" width="60" height="50" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="670" y="100" text-anchor="middle" fill="#5bc0be" class="detail">OUTPUT</text>
+
+  <!-- Bottom label -->
+  <text x="360" y="195" text-anchor="middle" fill="#444" class="label">DUAL-TANK FDN &middot; HADAMARD MATRIX &middot; MODIFIED SABINE RT60 &middot; C++17 &middot; JUCE</text>
+</svg>

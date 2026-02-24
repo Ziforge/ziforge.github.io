@@ -1,0 +1,63 @@
+<svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="180" rx="8" fill="#111"/>
+
+  <!-- Analog Hardware -->
+  <rect x="15" y="20" width="120" height="60" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="75" y="42" text-anchor="middle" fill="#5bc0be" class="detail">EMS HARDWARE</text>
+  <text x="75" y="56" text-anchor="middle" fill="#999" class="tiny">Buchla / Serge</text>
+  <text x="75" y="68" text-anchor="middle" fill="#999" class="tiny">Synthi VCS3</text>
+
+  <line x1="135" y1="50" x2="175" y2="50" stroke="#555" stroke-width="1.5"/>
+  <polygon points="172,46 180,50 172,54" fill="#555"/>
+
+  <!-- Training Data -->
+  <rect x="180" y="20" width="110" height="60" rx="5" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1"/>
+  <text x="235" y="42" text-anchor="middle" fill="#e8a835" class="detail">TRAINING DATA</text>
+  <text x="235" y="56" text-anchor="middle" fill="#999" class="tiny">Sweep Captures</text>
+  <text x="235" y="68" text-anchor="middle" fill="#999" class="tiny">Parameter Space</text>
+
+  <line x1="290" y1="50" x2="330" y2="50" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="327,46 335,50 327,54" fill="#e8a835"/>
+
+  <!-- WaveNet Architecture -->
+  <rect x="335" y="10" width="220" height="130" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="445" y="33" text-anchor="middle" fill="#e8a835" class="subtitle">NEURAL ARCHITECTURE</text>
+  <line x1="348" y1="40" x2="542" y2="40" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <rect x="350" y="48" width="90" height="35" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="395" y="63" text-anchor="middle" fill="#ccc" class="tiny">WaveNet</text>
+  <text x="395" y="76" text-anchor="middle" fill="#999" class="tiny">Dilated Causal Conv</text>
+
+  <rect x="450" y="48" width="90" height="35" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="495" y="63" text-anchor="middle" fill="#ccc" class="tiny">CNN</text>
+  <text x="495" y="76" text-anchor="middle" fill="#999" class="tiny">Residual Blocks</text>
+
+  <rect x="350" y="92" width="190" height="38" rx="3" fill="rgba(232,168,53,0.06)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="445" y="107" text-anchor="middle" fill="#ccc" class="detail">PyTorch Training</text>
+  <text x="445" y="121" text-anchor="middle" fill="#999" class="tiny">Nonlinear Behaviour Capture</text>
+
+  <!-- Output -->
+  <line x1="555" y1="75" x2="595" y2="75" stroke="#555" stroke-width="1.5"/>
+  <polygon points="592,71 600,75 592,79" fill="#555"/>
+
+  <rect x="600" y="45" width="100" height="65" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="650" y="65" text-anchor="middle" fill="#5bc0be" class="subtitle">EMULATION</text>
+  <line x1="612" y1="72" x2="688" y2="72" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="650" y="87" text-anchor="middle" fill="#999" class="tiny">Digital Filter</text>
+  <text x="650" y="99" text-anchor="middle" fill="#999" class="tiny">Real-time</text>
+
+  <!-- EMS label -->
+  <rect x="15" y="100" width="120" height="38" rx="4" fill="rgba(91,192,190,0.03)" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="75" y="116" text-anchor="middle" fill="#5bc0be" class="tiny">EMS STOCKHOLM</text>
+  <text x="75" y="130" text-anchor="middle" fill="#999" class="tiny">Guest Composer</text>
+
+  <text x="360" y="172" text-anchor="middle" fill="#444" class="label">WAVENET / CNN &middot; ANALOG FILTER EMULATION &middot; PYTORCH &middot; EMS STOCKHOLM RESIDENCY</text>
+</svg>

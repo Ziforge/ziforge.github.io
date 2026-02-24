@@ -1,0 +1,62 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- Sweep Generator -->
+  <rect x="15" y="35" width="110" height="75" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="70" y="55" text-anchor="middle" fill="#e8a835" class="subtitle">SWEEP GEN</text>
+  <line x1="27" y1="62" x2="113" y2="62" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="70" y="78" text-anchor="middle" fill="#999" class="tiny">Log Sine Sweep</text>
+  <text x="70" y="90" text-anchor="middle" fill="#999" class="tiny">Automated</text>
+  <text x="70" y="102" text-anchor="middle" fill="#999" class="tiny">Calibrated</text>
+
+  <line x1="125" y1="72" x2="160" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="157,68 165,72 157,76" fill="#555"/>
+
+  <!-- Analog Filter (DUT) -->
+  <rect x="165" y="35" width="120" height="75" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="225" y="55" text-anchor="middle" fill="#5bc0be" class="subtitle">ANALOG FILTER</text>
+  <line x1="177" y1="62" x2="273" y2="62" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="225" y="78" text-anchor="middle" fill="#999" class="tiny">Device Under Test</text>
+  <text x="225" y="90" text-anchor="middle" fill="#999" class="tiny">EMS Synthi</text>
+  <text x="225" y="102" text-anchor="middle" fill="#999" class="tiny">Hardware Filter</text>
+
+  <line x1="285" y1="72" x2="320" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="317,68 325,72 317,76" fill="#555"/>
+
+  <!-- IR Capture -->
+  <rect x="325" y="25" width="130" height="95" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="2"/>
+  <text x="390" y="47" text-anchor="middle" fill="#e8a835" class="subtitle">IR CAPTURE</text>
+  <line x1="337" y1="54" x2="443" y2="54" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="390" y="70" text-anchor="middle" fill="#ccc" class="detail">JUCE Plugin</text>
+  <text x="390" y="84" text-anchor="middle" fill="#999" class="tiny">Deconvolution</text>
+  <text x="390" y="96" text-anchor="middle" fill="#999" class="tiny">Cataloguing</text>
+  <text x="390" y="108" text-anchor="middle" fill="#999" class="tiny">750 IR Files</text>
+
+  <line x1="455" y1="72" x2="490" y2="72" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="487,68 495,72 487,76" fill="#e8a835"/>
+
+  <!-- ML Training -->
+  <rect x="495" y="35" width="110" height="75" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="550" y="55" text-anchor="middle" fill="#e8a835" class="subtitle">ML TRAINING</text>
+  <line x1="507" y1="62" x2="593" y2="62" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="550" y="78" text-anchor="middle" fill="#999" class="tiny">Training Dataset</text>
+  <text x="550" y="90" text-anchor="middle" fill="#999" class="tiny">WaveNet Input</text>
+  <text x="550" y="102" text-anchor="middle" fill="#999" class="tiny">&rarr; MLEMS Filter</text>
+
+  <!-- Arrow to model -->
+  <line x1="605" y1="72" x2="640" y2="72" stroke="#555" stroke-width="1.5"/>
+  <polygon points="637,68 645,72 637,76" fill="#555"/>
+  <rect x="645" y="50" width="55" height="44" rx="4" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="672" y="69" text-anchor="middle" fill="#5bc0be" class="tiny">ONNX</text>
+  <text x="672" y="82" text-anchor="middle" fill="#5bc0be" class="tiny">MODEL</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">IR CAPTURE PIPELINE &middot; SWEEP &rarr; ANALOG &rarr; DECONVOLUTION &rarr; ML TRAINING &middot; C++ / JUCE</text>
+</svg>

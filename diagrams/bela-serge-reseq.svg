@@ -1,0 +1,65 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- Audio Input -->
+  <rect x="15" y="40" width="70" height="55" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="50" y="63" text-anchor="middle" fill="#5bc0be" class="detail">AUDIO</text>
+  <text x="50" y="78" text-anchor="middle" fill="#5bc0be" class="detail">IN</text>
+
+  <line x1="85" y1="67" x2="115" y2="67" stroke="#555" stroke-width="1.5"/>
+  <polygon points="112,63 120,67 112,71" fill="#555"/>
+
+  <!-- Filter Bank -->
+  <rect x="120" y="15" width="400" height="115" rx="8" fill="rgba(232,168,53,0.04)" stroke="#e8a835" stroke-width="2"/>
+  <text x="320" y="37" text-anchor="middle" fill="#e8a835" class="subtitle">RESONANT FILTER BANK</text>
+  <line x1="135" y1="44" x2="505" y2="44" stroke="rgba(232,168,53,0.15)" stroke-width="0.5"/>
+
+  <!-- Individual bands -->
+  <rect x="135" y="52" width="55" height="32" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="162" y="65" text-anchor="middle" fill="#ccc" class="tiny">Band 1</text>
+  <text x="162" y="77" text-anchor="middle" fill="#999" class="tiny">BP/Q</text>
+
+  <rect x="197" y="52" width="55" height="32" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="224" y="65" text-anchor="middle" fill="#ccc" class="tiny">Band 2</text>
+  <text x="224" y="77" text-anchor="middle" fill="#999" class="tiny">BP/Q</text>
+
+  <rect x="259" y="52" width="55" height="32" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="286" y="65" text-anchor="middle" fill="#ccc" class="tiny">Band 3</text>
+  <text x="286" y="77" text-anchor="middle" fill="#999" class="tiny">BP/Q</text>
+
+  <text x="333" y="72" text-anchor="middle" fill="#666" class="tiny">...</text>
+
+  <rect x="349" y="52" width="55" height="32" rx="3" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="376" y="65" text-anchor="middle" fill="#ccc" class="tiny">Band N</text>
+  <text x="376" y="77" text-anchor="middle" fill="#999" class="tiny">BP/Q</text>
+
+  <rect x="411" y="52" width="95" height="32" rx="3" fill="rgba(232,168,53,0.06)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="458" y="65" text-anchor="middle" fill="#ccc" class="tiny">Self-Oscillation</text>
+  <text x="458" y="77" text-anchor="middle" fill="#999" class="tiny">Q &rarr; &infin;</text>
+
+  <!-- Feedback arrow -->
+  <text x="320" y="105" text-anchor="middle" fill="#999" class="tiny">Variable Resonance &middot; Per-Band Gain &middot; CV Freq Control</text>
+  <text x="320" y="120" text-anchor="middle" fill="#666" class="tiny">EQ Mode &harr; Sound Source Mode</text>
+
+  <!-- Output -->
+  <line x1="520" y1="67" x2="555" y2="67" stroke="#555" stroke-width="1.5"/>
+  <polygon points="552,63 560,67 552,71" fill="#555"/>
+
+  <!-- Bela Output -->
+  <rect x="560" y="30" width="140" height="80" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="630" y="52" text-anchor="middle" fill="#5bc0be" class="subtitle">BELA</text>
+  <line x1="572" y1="59" x2="688" y2="59" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="630" y="74" text-anchor="middle" fill="#999" class="tiny">Embedded Linux</text>
+  <text x="630" y="86" text-anchor="middle" fill="#999" class="tiny">Ultra-Low Latency</text>
+  <text x="630" y="98" text-anchor="middle" fill="#999" class="tiny">Analog I/O</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">SERGE RESONANT EQUALISER &middot; BELA EMBEDDED AUDIO &middot; VARIABLE-Q BANDPASS &middot; C++</text>
+</svg>

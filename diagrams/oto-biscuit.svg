@@ -1,0 +1,61 @@
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="160" rx="8" fill="#111"/>
+
+  <!-- Input -->
+  <rect x="15" y="45" width="70" height="50" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="50" y="68" text-anchor="middle" fill="#5bc0be" class="detail">AUDIO</text>
+  <text x="50" y="82" text-anchor="middle" fill="#5bc0be" class="detail">IN</text>
+
+  <line x1="85" y1="70" x2="120" y2="70" stroke="#555" stroke-width="1.5"/>
+  <polygon points="117,66 125,70 117,74" fill="#555"/>
+
+  <!-- OTA VCA -->
+  <rect x="125" y="30" width="110" height="80" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="180" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">OTA VCA</text>
+  <line x1="137" y1="59" x2="223" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="180" y="74" text-anchor="middle" fill="#ccc" class="detail">LM13700</text>
+  <text x="180" y="88" text-anchor="middle" fill="#999" class="tiny">Linearization</text>
+  <text x="180" y="100" text-anchor="middle" fill="#999" class="tiny">Darlington Buffer</text>
+
+  <line x1="235" y1="70" x2="270" y2="70" stroke="#e8a835" stroke-width="1.5"/>
+  <polygon points="267,66 275,70 267,74" fill="#e8a835"/>
+
+  <!-- OTA Filter -->
+  <rect x="275" y="30" width="120" height="80" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="2"/>
+  <text x="335" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">OTA FILTER</text>
+  <line x1="287" y1="59" x2="383" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="335" y="74" text-anchor="middle" fill="#ccc" class="detail">LM13700</text>
+  <text x="335" y="88" text-anchor="middle" fill="#999" class="tiny">State Variable</text>
+  <text x="335" y="100" text-anchor="middle" fill="#999" class="tiny">Nonlinear Gm</text>
+
+  <line x1="395" y1="70" x2="430" y2="70" stroke="#e8a835" stroke-width="1.5"/>
+  <polygon points="427,66 435,70 427,74" fill="#e8a835"/>
+
+  <!-- Waveshaper -->
+  <rect x="435" y="30" width="110" height="80" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="490" y="52" text-anchor="middle" fill="#e8a835" class="subtitle">WAVESHAPER</text>
+  <line x1="447" y1="59" x2="533" y2="59" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="490" y="74" text-anchor="middle" fill="#ccc" class="detail">Diode Clip</text>
+  <text x="490" y="88" text-anchor="middle" fill="#999" class="tiny">Bit Reduction</text>
+  <text x="490" y="100" text-anchor="middle" fill="#999" class="tiny">Sample Rate &darr;</text>
+
+  <line x1="545" y1="70" x2="580" y2="70" stroke="#555" stroke-width="1.5"/>
+  <polygon points="577,66 585,70 577,74" fill="#555"/>
+
+  <!-- Output -->
+  <rect x="585" y="35" width="115" height="70" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="642" y="57" text-anchor="middle" fill="#5bc0be" class="subtitle">OUTPUT</text>
+  <line x1="597" y1="64" x2="688" y2="64" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="642" y="80" text-anchor="middle" fill="#999" class="tiny">SPICE Verified</text>
+  <text x="642" y="92" text-anchor="middle" fill="#999" class="tiny">PCB Layout</text>
+
+  <text x="360" y="148" text-anchor="middle" fill="#444" class="label">OTO BISCUIT RECREATION &middot; LM13700 OTA &middot; ANALOG CIRCUIT DESIGN &middot; SPICE &middot; PCB</text>
+</svg>

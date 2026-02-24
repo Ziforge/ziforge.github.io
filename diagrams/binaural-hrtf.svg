@@ -1,0 +1,76 @@
+<svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="180" rx="8" fill="#111"/>
+
+  <!-- Source -->
+  <rect x="15" y="55" width="80" height="55" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="55" y="78" text-anchor="middle" fill="#5bc0be" class="detail">AUDIO</text>
+  <text x="55" y="93" text-anchor="middle" fill="#5bc0be" class="detail">SOURCE</text>
+
+  <line x1="95" y1="82" x2="130" y2="82" stroke="#555" stroke-width="1.5"/>
+  <polygon points="127,78 135,82 127,86" fill="#555"/>
+
+  <!-- HRTF Processing -->
+  <rect x="135" y="20" width="210" height="130" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="240" y="43" text-anchor="middle" fill="#e8a835" class="subtitle">HRTF PROCESSING</text>
+  <line x1="148" y1="50" x2="332" y2="50" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <!-- Left ear -->
+  <rect x="150" y="58" width="85" height="38" rx="4" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="192" y="74" text-anchor="middle" fill="#ccc" class="detail">Left HRIR</text>
+  <text x="192" y="88" text-anchor="middle" fill="#999" class="tiny">ITD + ILD</text>
+
+  <!-- Right ear -->
+  <rect x="150" y="104" width="85" height="38" rx="4" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.3)" stroke-width="0.5"/>
+  <text x="192" y="120" text-anchor="middle" fill="#ccc" class="detail">Right HRIR</text>
+  <text x="192" y="134" text-anchor="middle" fill="#999" class="tiny">ITD + ILD</text>
+
+  <!-- Woodworth model -->
+  <rect x="248" y="58" width="85" height="84" rx="4" fill="rgba(232,168,53,0.06)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="290" y="77" text-anchor="middle" fill="#ccc" class="detail">Woodworth</text>
+  <text x="290" y="92" text-anchor="middle" fill="#999" class="tiny">Spherical Head</text>
+  <text x="290" y="105" text-anchor="middle" fill="#999" class="tiny">Brown-Duda</text>
+  <text x="290" y="118" text-anchor="middle" fill="#999" class="tiny">Frac. Delay</text>
+  <text x="290" y="131" text-anchor="middle" fill="#999" class="tiny">IRCAM Room</text>
+
+  <!-- Arrow out -->
+  <line x1="345" y1="82" x2="380" y2="82" stroke="#555" stroke-width="1.5"/>
+  <polygon points="377,78 385,82 377,86" fill="#555"/>
+
+  <!-- Head Tracker -->
+  <rect x="385" y="45" width="110" height="75" rx="6" fill="rgba(91,192,190,0.05)" stroke="#5bc0be" stroke-width="1.5"/>
+  <text x="440" y="65" text-anchor="middle" fill="#5bc0be" class="subtitle">HEAD TRACKER</text>
+  <line x1="397" y1="72" x2="483" y2="72" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="440" y="88" text-anchor="middle" fill="#999" class="tiny">MediaPipe</text>
+  <text x="440" y="100" text-anchor="middle" fill="#999" class="tiny">Real-time</text>
+  <text x="440" y="112" text-anchor="middle" fill="#999" class="tiny">Orientation</text>
+
+  <!-- Feedback arrow back to HRTF -->
+  <path d="M 440 120 L 440 155 L 240 155 L 240 150" fill="none" stroke="rgba(91,192,190,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+  <polygon points="236,153 240,145 244,153" fill="rgba(91,192,190,0.3)"/>
+  <text x="340" y="163" text-anchor="middle" fill="rgba(91,192,190,0.5)" class="tiny">updates azimuth / elevation</text>
+
+  <!-- Arrow to output -->
+  <line x1="495" y1="82" x2="540" y2="82" stroke="#555" stroke-width="1.5"/>
+  <polygon points="537,78 545,82 537,86" fill="#555"/>
+
+  <!-- Binaural Output -->
+  <rect x="545" y="40" width="155" height="85" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="622" y="62" text-anchor="middle" fill="#5bc0be" class="subtitle">BINAURAL OUTPUT</text>
+  <line x1="557" y1="69" x2="688" y2="69" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <rect x="558" y="77" width="62" height="18" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="589" y="89" text-anchor="middle" fill="#ccc" class="tiny">Left</text>
+  <rect x="625" y="77" width="62" height="18" rx="2" fill="rgba(91,192,190,0.08)" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="656" y="89" text-anchor="middle" fill="#ccc" class="tiny">Right</text>
+  <text x="622" y="113" text-anchor="middle" fill="#999" class="tiny">Immersive 3D Audio</text>
+
+  <text x="360" y="176" text-anchor="middle" fill="#444" class="label">HEAD-TRACKABLE HRTF &middot; WOODWORTH ITD &middot; BROWN-DUDA ILD &middot; MEDIAIPE &middot; PYTHON</text>
+</svg>

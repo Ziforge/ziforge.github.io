@@ -1,0 +1,90 @@
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="200" rx="8" fill="#111"/>
+
+  <!-- Camera -->
+  <rect x="15" y="55" width="70" height="55" rx="5" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="50" y="78" text-anchor="middle" fill="#5bc0be" class="detail">CAMERA</text>
+  <text x="50" y="100" text-anchor="middle" fill="#666" class="tiny">Webcam</text>
+
+  <line x1="85" y1="82" x2="110" y2="82" stroke="#555" stroke-width="1.5"/>
+  <polygon points="107,78 115,82 107,86" fill="#555"/>
+
+  <!-- Face Detection -->
+  <rect x="115" y="45" width="90" height="75" rx="5" fill="rgba(91,192,190,0.04)" stroke="rgba(91,192,190,0.5)" stroke-width="1"/>
+  <text x="160" y="65" text-anchor="middle" fill="#5bc0be" class="detail">FACE</text>
+  <text x="160" y="78" text-anchor="middle" fill="#5bc0be" class="detail">DETECT</text>
+  <line x1="125" y1="85" x2="195" y2="85" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="160" y="99" text-anchor="middle" fill="#999" class="tiny">68 Landmarks</text>
+  <text x="160" y="111" text-anchor="middle" fill="#999" class="tiny">Haar / dlib</text>
+
+  <line x1="205" y1="82" x2="230" y2="82" stroke="#555" stroke-width="1.5"/>
+  <polygon points="227,78 235,82 227,86" fill="#555"/>
+
+  <!-- Emotion CNN -->
+  <rect x="235" y="40" width="100" height="85" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="285" y="62" text-anchor="middle" fill="#e8a835" class="subtitle">EMOTION</text>
+  <text x="285" y="76" text-anchor="middle" fill="#e8a835" class="subtitle">CNN</text>
+  <line x1="247" y1="83" x2="323" y2="83" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="285" y="98" text-anchor="middle" fill="#999" class="tiny">Mini-Xception</text>
+  <text x="285" y="110" text-anchor="middle" fill="#999" class="tiny">ONNX Runtime</text>
+  <text x="285" y="122" text-anchor="middle" fill="#999" class="tiny">Kalman Filter</text>
+
+  <line x1="335" y1="82" x2="360" y2="82" stroke="#e8a835" stroke-width="1.5"/>
+  <polygon points="357,78 365,82 357,86" fill="#e8a835"/>
+
+  <!-- 7 Physics Models -->
+  <rect x="365" y="10" width="210" height="175" rx="6" fill="rgba(232,168,53,0.04)" stroke="#e8a835" stroke-width="2"/>
+  <text x="470" y="30" text-anchor="middle" fill="#e8a835" class="subtitle">7 PHYSICS MODELS</text>
+  <line x1="377" y1="37" x2="563" y2="37" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <!-- Individual models -->
+  <rect x="378" y="44" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="56" text-anchor="middle" fill="#ccc" class="tiny">Lorenz</text>
+  <text x="495" y="56" text-anchor="middle" fill="#666" class="tiny">angry</text>
+
+  <rect x="378" y="66" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="78" text-anchor="middle" fill="#ccc" class="tiny">Duffing</text>
+  <text x="495" y="78" text-anchor="middle" fill="#666" class="tiny">disgust</text>
+
+  <rect x="378" y="88" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="100" text-anchor="middle" fill="#ccc" class="tiny">Mass-Spring</text>
+  <text x="495" y="100" text-anchor="middle" fill="#666" class="tiny">fear</text>
+
+  <rect x="378" y="110" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="122" text-anchor="middle" fill="#ccc" class="tiny">Modal Res</text>
+  <text x="495" y="122" text-anchor="middle" fill="#666" class="tiny">happy</text>
+
+  <rect x="378" y="132" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="144" text-anchor="middle" fill="#ccc" class="tiny">Breath</text>
+  <text x="495" y="144" text-anchor="middle" fill="#666" class="tiny">sad</text>
+
+  <rect x="378" y="154" width="90" height="18" rx="2" fill="rgba(232,168,53,0.08)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="423" y="166" text-anchor="middle" fill="#ccc" class="tiny">Membrane</text>
+  <text x="495" y="166" text-anchor="middle" fill="#666" class="tiny">surprise</text>
+
+  <!-- Arrow to output -->
+  <line x1="575" y1="97" x2="610" y2="97" stroke="#555" stroke-width="1.5"/>
+  <polygon points="607,93 615,97 607,101" fill="#555"/>
+
+  <!-- CV Output -->
+  <rect x="615" y="40" width="85" height="115" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="657" y="60" text-anchor="middle" fill="#5bc0be" class="subtitle">7x CV</text>
+  <line x1="625" y1="67" x2="690" y2="67" stroke="rgba(91,192,190,0.2)" stroke-width="0.5"/>
+  <text x="657" y="84" text-anchor="middle" fill="#ccc" class="detail">Expert</text>
+  <text x="657" y="97" text-anchor="middle" fill="#ccc" class="detail">Sleepers</text>
+  <text x="657" y="110" text-anchor="middle" fill="#ccc" class="detail">ES-9</text>
+  <line x1="625" y1="118" x2="690" y2="118" stroke="rgba(91,192,190,0.15)" stroke-width="0.5"/>
+  <text x="657" y="133" text-anchor="middle" fill="#999" class="tiny">DC-coupled</text>
+  <text x="657" y="145" text-anchor="middle" fill="#999" class="tiny">+/-5V</text>
+
+  <text x="360" y="197" text-anchor="middle" fill="#444" class="label">FACE &rarr; EMOTION &rarr; PHYSICS &rarr; CV &middot; C++ / PYTHON &middot; OPENCV &middot; ONNX &middot; EURORACK</text>
+</svg>

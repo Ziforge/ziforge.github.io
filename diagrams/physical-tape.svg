@@ -1,0 +1,82 @@
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .title { font-size: 13px; font-weight: 700; }
+    .subtitle { font-size: 10px; font-weight: 500; }
+    .detail { font-size: 9px; }
+    .tiny { font-size: 8px; }
+    .label { font-size: 7.5px; letter-spacing: 0.5px; }
+  </style>
+
+  <rect x="0" y="0" width="720" height="220" rx="8" fill="#111"/>
+
+  <!-- Audio Input -->
+  <rect x="20" y="65" width="90" height="70" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="65" y="92" text-anchor="middle" fill="#5bc0be" class="subtitle">AUDIO</text>
+  <text x="65" y="106" text-anchor="middle" fill="#5bc0be" class="subtitle">INPUT</text>
+  <text x="65" y="125" text-anchor="middle" fill="#666" class="tiny">48kHz</text>
+
+  <!-- Arrow -->
+  <line x1="110" y1="100" x2="150" y2="100" stroke="#555" stroke-width="1.5"/>
+  <polygon points="147,96 155,100 147,104" fill="#555"/>
+
+  <!-- Write Head -->
+  <rect x="155" y="55" width="80" height="90" rx="5" fill="rgba(232,168,53,0.06)" stroke="rgba(232,168,53,0.4)" stroke-width="1"/>
+  <text x="195" y="78" text-anchor="middle" fill="#e8a835" class="detail">WRITE</text>
+  <text x="195" y="92" text-anchor="middle" fill="#e8a835" class="detail">HEAD</text>
+  <line x1="165" y1="100" x2="225" y2="100" stroke="rgba(232,168,53,0.15)" stroke-width="0.5"/>
+  <text x="195" y="116" text-anchor="middle" fill="#666" class="tiny">H-field</text>
+  <text x="195" y="128" text-anchor="middle" fill="#666" class="tiny">injection</text>
+
+  <!-- Arrow -->
+  <line x1="235" y1="100" x2="265" y2="100" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="262,96 270,100 262,104" fill="#e8a835"/>
+
+  <!-- 3D Tape Grid — the main block -->
+  <rect x="270" y="15" width="180" height="190" rx="8" fill="rgba(232,168,53,0.05)" stroke="#e8a835" stroke-width="2"/>
+  <text x="360" y="38" text-anchor="middle" fill="#e8a835" class="title">3D TAPE GRID</text>
+  <line x1="285" y1="46" x2="435" y2="46" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+
+  <!-- Grid dimensions visual — stacked layers -->
+  <rect x="300" y="55" width="100" height="14" rx="2" fill="rgba(232,168,53,0.12)" stroke="rgba(232,168,53,0.25)" stroke-width="0.5"/>
+  <rect x="305" y="60" width="100" height="14" rx="2" fill="rgba(232,168,53,0.09)" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <rect x="310" y="65" width="100" height="14" rx="2" fill="rgba(232,168,53,0.06)" stroke="rgba(232,168,53,0.15)" stroke-width="0.5"/>
+  <rect x="315" y="70" width="100" height="14" rx="2" fill="rgba(232,168,53,0.04)" stroke="rgba(232,168,53,0.1)" stroke-width="0.5"/>
+
+  <text x="360" y="102" text-anchor="middle" fill="#ccc" class="detail">64 x 256 x 4</text>
+  <text x="360" y="115" text-anchor="middle" fill="#999" class="tiny">65,536 grid points</text>
+
+  <line x1="285" y1="124" x2="435" y2="124" stroke="rgba(232,168,53,0.15)" stroke-width="0.5"/>
+  <text x="360" y="140" text-anchor="middle" fill="#999" class="tiny">Jiles-Atherton Hysteresis</text>
+  <text x="360" y="153" text-anchor="middle" fill="#999" class="tiny">Langevin Anhysteretic</text>
+  <text x="360" y="166" text-anchor="middle" fill="#999" class="tiny">7-pt Stencil Diffusion</text>
+  <text x="360" y="179" text-anchor="middle" fill="#999" class="tiny">Skin Effect Attenuation</text>
+  <text x="360" y="195" text-anchor="middle" fill="#666" class="tiny">6mm x 5cm x 10um</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="100" x2="480" y2="100" stroke="#e8a835" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="477,96 485,100 477,104" fill="#e8a835"/>
+
+  <!-- GPU Compute -->
+  <rect x="485" y="35" width="120" height="130" rx="6" fill="rgba(232,168,53,0.06)" stroke="#e8a835" stroke-width="1.5"/>
+  <text x="545" y="58" text-anchor="middle" fill="#e8a835" class="subtitle">METAL GPU</text>
+  <line x1="498" y1="65" x2="592" y2="65" stroke="rgba(232,168,53,0.2)" stroke-width="0.5"/>
+  <text x="545" y="82" text-anchor="middle" fill="#ccc" class="detail">65,536 threads</text>
+  <text x="545" y="98" text-anchor="middle" fill="#999" class="tiny">Compute Shaders</text>
+  <text x="545" y="112" text-anchor="middle" fill="#999" class="tiny">Parallel Dispatch</text>
+  <line x1="498" y1="122" x2="592" y2="122" stroke="rgba(232,168,53,0.15)" stroke-width="0.5"/>
+  <text x="545" y="138" text-anchor="middle" fill="#999" class="tiny">Real-time</text>
+  <text x="545" y="152" text-anchor="middle" fill="#999" class="tiny">@ 256-512 buf</text>
+
+  <!-- Arrow -->
+  <line x1="605" y1="100" x2="635" y2="100" stroke="#555" stroke-width="1.5"/>
+  <polygon points="632,96 640,100 632,104" fill="#555"/>
+
+  <!-- Output -->
+  <rect x="640" y="65" width="60" height="70" rx="6" fill="rgba(91,192,190,0.06)" stroke="#5bc0be" stroke-width="1"/>
+  <text x="670" y="95" text-anchor="middle" fill="#5bc0be" class="detail">OUT</text>
+  <text x="670" y="125" text-anchor="middle" fill="#666" class="tiny">VST3/AU</text>
+
+  <!-- Bottom label -->
+  <text x="360" y="215" text-anchor="middle" fill="#444" class="label">FULL PDE MAGNETIC FIELD SIMULATION &middot; C++17 &middot; APPLE METAL &middot; JUCE</text>
+</svg>
