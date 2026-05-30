@@ -397,6 +397,7 @@ nav .container {
 /* --- Projects --- */
 .projects-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
@@ -844,16 +845,23 @@ footer p {
   transform: translateY(0);
 }
 
-/* Stagger children — each card gets individual reveal via JS */
+/* Stagger children — each card gets individual reveal via JS.
+   Safety: after 1.5s show everything regardless of observer state so cards
+   never get stuck invisible if IntersectionObserver misses a scroll event. */
 .reveal-children > * {
   opacity: 0;
   transform: translateY(15px);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  animation: reveal-fallback 0s linear 1.5s forwards;
 }
 
 .reveal-children > .visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@keyframes reveal-fallback {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Responsive --- */
